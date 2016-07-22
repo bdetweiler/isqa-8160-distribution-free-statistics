@@ -1,0 +1,194 @@
+---
+title: "ISQA 8160 Exam II"
+author: "Brian Detweiler"
+date: "Thursday, July 28, 2016"
+header-includes:
+   - \usepackage{bbm}
+   - \usepackage[utf8]{inputenc}
+   - \usepackage{amsmath}
+   - \usepackage{amssymb}
+   - \usepackage{color}
+   - \usepackage{progressbar}
+   - \usepackage{array}
+   - \usepackage{tikz}
+   - \usepackage{verbatim}
+   - \usepackage{color,soul}
+   - \usepackage{blkarray}
+   - \usepackage[utf8]{inputenc}
+   - \usepackage{amssymb}
+   - \usepackage{pifont}
+   - \usepackage{diagbox}
+   - \usepackage{listings}
+   - \usepackage{color}
+output: pdf_document
+---
+
+$$
+% Matrix variable boldface
+\newcommand{\matr}[1]{\mathbf{#1}}
+% I seem to typo this a lot, so we'll just alias it
+\newcommand{\fraC}[2]{\frac{#1}{#2}}
+% for repeating values
+\newcommand*\repeating[1]{\overline{#1}}
+\newcommand{\xmark}{\ding{55}}%
+\newcommand\tab[1][1cm]{\hspace*{#1}}
+\newcommand\encircle[1]{%
+  \tikz[baseline=(X.base)] 
+    \node (X) [draw, shape=circle, inner sep=0] {\strut #1};}
+\newcommand{\specialcell}[2][c]{%
+  \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
+\newcommand{\ceil}[1]{\left \lceil #1 \right \rceil }
+\newcommand{\floor}[1]{\left \lfloor #1 \right \rfloor }
+$$
+
+
+# Chapter 3.1
+
+## 3.1 Problem 6.) A civic group reported to the town council that at least 60\% of the town residents were in favor of a particular bond issue. Forty-eight said yes. Is the report of the civic group reasonable?
+
+We have the following:
+$$
+\begin{split}
+    p &= 0.60\\
+    p^{*} &= 0.48\\
+    n &= 100\\
+    \alpha &= 0.05\\
+\end{split}
+$$
+
+The null hypothesis is that the sample probability is representative of a population probability of 60%. The alternative hypothesis is that they are not equal.
+
+$$
+\begin{split}
+    H_0 &: p = p^*\\
+    H_a &: p \neq p^*\\
+\end{split}
+$$
+
+```{r, echo=FALSE}
+# Suppress version warnings
+options(warn=-1)
+```
+
+```{r}
+library(binom)
+binom.test(x=48, n=100, p=0.60, alternative=c('two.sided'), conf.level=0.95)
+```
+
+And thus we reject the null hypothesis with a p-value of 0.01844 and a 95% confidence interval of (0.3790055, 0.5822102). The population mean appears to be less than 60%.
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+## 3.1 Problem 7.) Out of 20 recent takeover attempts, 5 were successfully resisted byt the companies being taken over. Assume these are independent events, and estimate the probability of a takeover attempt being successfully resisted. That is, find a 95% confidence interval.
+
+Setting up this problem we have the following values:
+$$
+\begin{split}
+    n &= 20\\
+    x &= 5\\
+\end{split}
+$$
+
+We can find the confidence interval using the binom.test like before:
+
+```{r}
+binom.test(x=5, n=20, alternative=c('two.sided'), conf.level=0.95)
+```
+
+### (a) Use Table A4.
+
+*Table A4* confirms the 95% confidence interval as (0.087, 0.491).
+
+### (b) Use Table A1.
+
+Although $n = 20$ is a smaller sample size than we generally require for using the normal distribution, we can nevertheless use it to obtain a slightly less accurate answer:
+
+$$
+\begin{split}
+    L &= \frac{Y}{n} - z_{1-\frac{\alpha}{2}} \sqrt{\frac{Y(n - Y)}{n^3}}\\
+    U &= \frac{Y}{n} + z_{1-\frac{\alpha}{2}} \sqrt{\frac{Y(n - Y)}{n^3}}\\
+\end{split}
+$$
+
+The z-value at $z_{1 - \frac{0.05}{2}} = z_{0.975}$ is 1.96. Plugging in our values, we get
+
+```{r}
+L <- (5/20) - 1.96 * sqrt((20 * (20 - 5)) / (20^3))
+U <- (5/20) + 1.96 * sqrt((20 * (20 - 5)) / (20^3))
+print(paste(paste(paste(paste('(', L),  ', '), U), ')'))
+```
+
+Clearly, with such a small sample size, the normal approximation will not return accurate results.
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+# Chapter 3.2
+
+## 3.2 Problem 1.) A random sample of tenth-grade boys resulted int he following 20 observed weights.
+
+\begin{center}
+\begin{tabular}{ c c c c c}
+  142 & 134 & 98  & 119 & 131\\
+  103 & 154 & 122 & 93  & 137\\
+  86  & 119 & 161 & 144 & 158\\
+  165 & 81  & 117 & 128 & 103\\
+\end{tabular}
+\end{center}
+
+## Test the hypothesis that the median weight is 103.
+
+Let's first order the data.
+```{r}
+weights <- sort(c(142, 134, 98,  119, 131,
+                  103, 154, 122, 93,  137,
+                  86,  119, 161, 144, 158, 
+                  165, 81,  117, 128, 103))
+weights
+```
+We will test the hypothesis that $x_{0.50} = 103$ with $\alpha = 0.05$.
+
+$$
+\begin{split}
+    H_0 &: p = p^*\\
+    H_a &: p \neq p^*\\
+\end{split}
+$$
+
+Since $n \leq 20$, the critical region is $c = \{T_1 \leq t_1, T_2 \geq t_2\}$, such that $P(y \leq t_1) = \alpha$ and $P(y \leq t_2) = 1 - \alpha$.
+
+Finding $t_1$ and $t_2$ can be done with a table, or with visual inspection and programmatic verification.
+
+```{r, echo=FALSE}
+n <- seq(0, 20, by=1)
+plot(n, dbinom(n, 20, .5), type="b")
+```
+
+It is clear that $t_1$ must be less than or equal to 6 and $t_2$ must be greter than or equal to 14. We can do some quick checking to find the exact values
+
+```{r}
+t_1 <- sum(dbinom(x=c(0:5), size=20, prob=0.5))
+t_2 <- 1 - sum(dbinom(x=c(0:14), size=20, prob=0.5))
+t_1
+t_2
+```
+
+Now it is clear, $t_1 = 5$ and $t_2 = 14$. But since $x^{(5)} = 103$, this falls in the critical region. The median does not appear to be 103. We reject the null hypothesis with a p-value of
+
+```{r}
+min(2*t_1, 2*t_2)
+```
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
