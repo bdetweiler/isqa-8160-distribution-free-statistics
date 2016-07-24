@@ -2,25 +2,25 @@
 title: "ISQA 8160 Exam II"
 author: "Brian Detweiler"
 date: "Thursday, July 28, 2016"
+output: html_document
 header-includes:
-   - \usepackage{bbm}
-   - \usepackage[utf8]{inputenc}
-   - \usepackage{amsmath}
-   - \usepackage{amssymb}
-   - \usepackage{color}
-   - \usepackage{progressbar}
-   - \usepackage{array}
-   - \usepackage{tikz}
-   - \usepackage{verbatim}
-   - \usepackage{color,soul}
-   - \usepackage{blkarray}
-   - \usepackage[utf8]{inputenc}
-   - \usepackage{amssymb}
-   - \usepackage{pifont}
-   - \usepackage{diagbox}
-   - \usepackage{listings}
-   - \usepackage{color}
-output: pdf_document
+- \usepackage{bbm}
+- \usepackage[utf8]{inputenc}
+- \usepackage{amsmath}
+- \usepackage{amssymb}
+- \usepackage{color}
+- \usepackage{progressbar}
+- \usepackage{array}
+- \usepackage{tikz}
+- \usepackage{verbatim}
+- \usepackage{color,soul}
+- \usepackage{blkarray}
+- \usepackage[utf8]{inputenc}
+- \usepackage{amssymb}
+- \usepackage{pifont}
+- \usepackage{diagbox}
+- \usepackage{listings}
+- \usepackage{color}
 ---
 
 $$
@@ -514,26 +514,25 @@ Finding the large sample approximation, we get
 $$
 \begin{split}
     r^* &= np^* + z_{\frac{\alpha}{2}} \sqrt{np^*(1 - p^*)}\\
-    &= 20(0.50) + 1.96 \sqrt{20 (.5)(1 - .5)}\\
-    &= 10 + 4.38\\
-    &= \left \lceil 14.4 \right \rceil\\
-    &= 15\\
+    &= 20(0.50) + 1.6449 \sqrt{20 (.5)(1 - .5)}\\
+    &= 10 + 3.78108\\
+    &= \left \lceil 13.67811 \right \rceil\\
+    &= 14\\
     \\
     s^* &= np^* + z_{1 - \frac{\alpha}{2}} \sqrt{np^*(1 - p^*)}\\
-    &= 20(0.50) - 1.96 \sqrt{20 (.5)(1 - .5)}\\
-    &= 20(0.50) - 1.96 \sqrt{20 (.5)(1 - .5)}\\
-    &= 10 - 4.38\\
-    &= \left \lceil 5.62 \right \rceil \\
-    &= 6
+    &= 20(0.50) - 1.6449 \sqrt{20 (.5)(1 - .5)}\\
+    &= 10 - 3.678108\\
+    &= \left \lceil 6.321892 \right \rceil \\
+    &= 7
 \end{split}
 $$
 
 ```{r}
-weights[r]
-weights[s]
+weights[14]
+weights[7]
 ```
 
-And so our large sample approximation for a 90% confidence interval is (103, 137)
+And so our large sample approximation for a 90% confidence interval is (117, 137)
 \begin{flushright}
   $\blacksquare$
 \end{flushright}
@@ -542,6 +541,146 @@ And so our large sample approximation for a 90% confidence interval is (103, 137
 
 ## 8.) Armor plating with a thickness of 10 cm is being tested to see how deeply a given projectile will penetrate armor. Fifty projectiles are fired at the armor plating, and the depth of penetration is measured. Seven of the projectiles pierced a hole through the armor plating, so their depth of penetration is recorded as 10+. All fifty values, ordered from smallest to largest, are given as follows.
 
-5.37, 5.39, 5.42, 5.51, 5.63, 5.74, 5.82, 5.83, 5.94, 5.98, 6.07, 6.07, 6.13, 6.20, 6.21, 6.23, 6.25, 
+## 5.37, 5.39, 5.42, 5.51, 5.63, 5.74, 5.82, 5.83, 5.94, 5.98, 6.07, 6.07, 6.13, 6.20, 6.21, 6.23, 6.25, 6.26, 6.26, 6.28, 6.29, 6.31, 6.35, 6.41, 6.57, 6.67, 6.81, 7.03, 7.40, 7.44, 7.82, 8.03, 8.11, 8.44, 8.51, 8.72, 8.83, 9.04, 9.33, 9.51, 9.61, 9.68, 9.82, 10+, 10+, 10+, 10+, 10+, 10+, 10+
+
+## Find a 95% confidence interval for the median penetration of the armor.
+
+First, we'll need to get this data into a workable format.
+
+```{r}
+penetration <- c(5.37, 5.39, 5.42, 5.51, 5.63, 5.74, 5.82, 5.83, 5.94, 5.98, 6.07, 6.07, 6.13, 6.20, 6.21, 6.23, 6.25, 6.26, 6.26, 6.28, 6.29, 6.31, 6.35, 6.41, 6.57, 6.67, 6.81, 7.03, 7.40, 7.44, 7.82, 8.03, 8.11, 8.44, 8.51, 8.72, 8.83, 9.04, 9.33, 9.51, 9.61, 9.68, 9.82, 10, 10, 10, 10, 10, 10, 10)
+penetration.df <- data.frame(penetration)
+```
+
+```{r}
+trials <- 50
+probability <- 0.50
+alpha <- 0.05
+left.crit.region <- alpha / 2
+right.crit.region <- 1 - (alpha / 2)
+```
+
+Finding the large sample approximation, we get
+
+$$
+\begin{split}
+    r^* &= np^* + z_{\frac{\alpha}{2}} \sqrt{np^*(1 - p^*)}\\
+    &= 50(0.50) + 1.96 \sqrt{50 (.5)(1 - .5)}\\
+    &= 25 + 6.929646\\
+    &= \left \lceil 31.92965 \right \rceil\\
+    &= 32\\
+    \\
+    s^* &= np^* + z_{1 - \frac{\alpha}{2}} \sqrt{np^*(1 - p^*)}\\
+    &= 50(0.50) - 1.96 \sqrt{50 (.5)(1 - .5)}\\
+    &= 25 - 6.929646\\
+    &= \left \lceil 18.07035 \right \rceil \\
+    &= 19
+\end{split}
+$$
+
+```{r}
+penetration[32]
+penetration[19]
+```
 
 
+And so our large sample approximation for a 95% confidence interval is (6.26, 8.03).
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+# Chapter 3.3
+
+## 7.) A fitness gym has measured the percentage of fat on 86 of its members.
+
+## (a) At least what percent of its members have fat percentages between the smallest and the largest of the percentages measured on the 86 members in the sample, with 95% certainty? With 90% certainty?
+
+Rephrasing this, we want to know what percentage of the population has a fat percentage in the sample.
+
+We want to find q, such that
+$$
+  X^{(r)} \leq \text{ at least q% of the population } \leq x^{(n + 1 - m)}\\
+$$
+
+where
+$$
+  \begin{split}
+    n &= 86\\
+    \alpha &= 0.10\\
+    r &= 0\\
+    m &= 1\\
+    \chi_{2, 0.90}^2 &= 4.60517\\
+    q &= \frac{4n - 2(r + m -1) - \chi_{2(r + m), 1-\alpha}^2}{4n - 2(r + m - 1) + \chi_{2(r + m), 1 - \alpha}^2}\\
+    &= \frac{4(86) - 2(0 + 1 -1) - \chi_{2(0 + 1), 1 - 0.10}^2}{4(86) - 2(0 + 1 - 1) + \chi_{2(0 + 1), 1 - 0.10}^2}\\
+    &= \frac{344 - \chi_{2, 0.90}^2}{344 + \chi_{2, 0.90}^2}\\
+    &= \frac{344 - 4.60517}{344 + 4.60517}\\
+    &= \frac{339.3948}{348.6052}\\
+    &= 0.9735794\\
+  \end{split}
+$$
+
+```{r}
+q <- function(n, r, m, percentile) {
+  (4*n - 2*(r + m - 1) - qchisq(p=percentile, df=2*(r + m)))/(4*n - 2*(r + m - 1) + qchisq(p=percentile, df=2*(r + m)))
+}
+qchisq(p=0.90, df=2*(0 + 1))
+q(n=86, r=0, m=1, percentile=0.90)
+```
+
+So 97.35794% of the population (the gym) will be represented, with 90% confidence.
+
+__NOTE: The back of the book lists 94.6%, but as we have shown clearly above, that number does not work out.__
+
+$$
+  \begin{split}
+    \chi_{2, 0.95}^2 &= 5.991465\\
+    q &= \frac{4n - 2(r + m -1) - \chi_{2(r + m), 1-\alpha}^2}{4n - 2(r + m - 1) + \chi_{2(r + m), 1 - \alpha}^2}\\
+    &= \frac{344 - \chi_{2, 0.95}^2}{344 + \chi_{2, 0.95}^2}\\
+    &= \frac{344 - 5.991465}{344 + 5.991465}\\
+    &= \frac{338.0085}{349.9915}\\
+    &= 0.9657622\\
+  \end{split}
+$$
+```{r}
+qchisq(p=0.95, df=2*(0 + 1))
+q(n=86, r=0, m=1, percentile=0.95)
+```
+With 95% confidence, we can say that 96.57622% will be represented.
+
+## (b) At least what percent of its members have fat percentage between $X^{(2)}$ and $X^{(85)}$ with 95% certainty? With 90% certainty?
+
+$$
+  \begin{split}
+    n &= 86\\
+    \alpha &= 0.05\\
+    r &= 2\\
+    m &= 2\\
+    \chi_{2, 0.90}^2 &= 4.60517\\
+    q &= \frac{4n - 2(r + m -1) - \chi_{2(r + m), 1-\alpha}^2}{4n - 2(r + m - 1) + \chi_{2(r + m), 1 - \alpha}^2}\\
+    &= \frac{344 - 6 - \chi_{6, 0.95}^2}{344 - 6 + \chi_{6, 0.95}^2}\\
+    &= \frac{344 - 6 - 15.50731}{344 - 6 + 15.50731}\\
+    &= \frac{322.49269}{353.50731}\\
+    &= 0.912265972661 \\
+  \end{split}
+$$
+```{r}
+qchisq(p=0.95, df=2*(2 + 2))
+q(n=86, r=2, m=2, percentile=0.95)
+```
+We can say 91.2265972661% will be represented with 95% confidence. 
+
+```{r}
+qchisq(p=0.90, df=2*(2 + 2))
+q(n=86, r=2, m=2, percentile=0.90)
+```
+
+And we can say with 90% confidence that 92.39441% will be represented.
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
