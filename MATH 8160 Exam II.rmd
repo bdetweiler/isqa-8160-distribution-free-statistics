@@ -660,7 +660,7 @@ Finding the P-values, we get
   exact(min(pbinom(q=24, size=50, prob=0.5), (1 - pbinom(q=24, size=50, prob=0.5))))
 ```
 
-And since $0.44 > \alpha$, we cannot reject the null hypothesis that 6.5 is not the median.
+And since $0.44 > \alpha$, we cannot reject the null hypothesis that 6.5 is the median.
 
 \begin{flushright}
   $\blacksquare$
