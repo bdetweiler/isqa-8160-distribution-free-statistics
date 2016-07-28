@@ -2,7 +2,7 @@
 title: "ISQA 8160 Exam II"
 author: "Brian Detweiler"
 date: "Thursday, July 28, 2016"
-output: html_document
+output: pdf_document
 header-includes:
 - \usepackage{bbm}
 - \usepackage[utf8]{inputenc}
@@ -47,7 +47,7 @@ exact <- function(a) print(a, digits=nchar(a))
 
 # Chapter 3.1
 
-## 3.1 Problem 6.) A civic group reported to the town council that at least 60\% of the town residents were in favor of a particular bond issue. Forty-eight said yes. Is the report of the civic group reasonable?
+## 3.1 Problem 6.) A civic group reported to the town council that at least 60\% of the town residents were in favor of a particular bond issue. The town council then asked a random sample of 100 residents if they were in favor of the bond issue. Forty-eight said yes. Is the report of the civic group reasonable?
 
 We have the following:
 $$
@@ -65,6 +65,7 @@ $$
 \begin{split}
     H_0 &: p = p^*\\
     H_a &: p \neq p^*\\
+    c &= \{T : T \leq np^* + z_{\frac{\alpha}{2}}\sqrt{np^*(1 - p^*)} \text { or } T > np^* + z_{1 - \frac{\alpha}{2}} \sqrt{np^*(1 - p^*)}\\
 \end{split}
 $$
 
@@ -73,12 +74,40 @@ $$
 options(warn=-1)
 ```
 
-```{r}
+```{r, echo=FALSE}
 library(binom)
-binom.test(x=48, n=100, p=0.60, alternative=c('two.sided'), conf.level=0.95)
+```
+
+```{r}
+trials <- 100
+successes <- 48
+probability <- 0.60
+alpha <- 0.05
+conf.level <- 1 - alpha
+n <- c(0:trials)
+
+n <- seq(0, trials, by=1)
+barplot(pbinom(n, trials, probability), names.arg=n, 
+        xlab=paste(paste(paste('Cumulative Binom(', trials), probability, sep=','), ')'))
+
+binom.test(x=successes, n=trials, p=probability, alternative=c('two.sided'), conf.level=(conf.level))
 ```
 
 And thus we reject the null hypothesis with a p-value of 0.01844 and a 95% confidence interval of (0.3790055, 0.5822102). The population mean appears to be less than 60%.
+
+Alternatively, we can use normal approximation to the binomial,
+
+$$
+\begin{split}
+  T &= 48\\
+  T &\leq 100(0.60) + 1.96 \cdot \sqrt{100*(0.60)(0.40)}\\
+  48 &\leq 69.602\\ 
+\end{split}
+$$
+
+```{r}
+
+```
 
 \begin{flushright}
   $\blacksquare$
