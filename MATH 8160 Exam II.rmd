@@ -166,7 +166,7 @@ Clearly, with such a small sample size, the normal approximation will not return
 
 # Chapter 3.2
 
-## 3.2 Problem 1.) A random sample of tenth-grade boys resulted int he following 20 observed weights.
+## 3.2 Problem 1.) A random sample of tenth-grade boys resulted in the following 20 observed weights.
 
 \begin{center}
 \begin{tabular}{ c c c c c}
@@ -622,6 +622,59 @@ penetration[19]
 
 
 And so our large sample approximation for a 95% confidence interval is (6.26, 8.03).
+
+## Also perform test to see if the median = 6.5?
+
+
+We will test the hypothesis that $x_{0.50} = 6.5$ with $\alpha = 0.05$ using a two-tailed test.
+
+$$
+\begin{split}
+    H_0 &: p \leq p^*\\
+    H_a &: p > p^*\\
+    c &= \{T_1: T_1 \leq t_1 \text{ or } T_2: T_2 > t_2\}\\
+    n &= 50\\
+\end{split}
+$$
+
+```{r}
+T1 <- length(penetration.df[penetration.df$penetration <= 6.5, ])
+T1
+T2 <- length(penetration.df[penetration.df$penetration < 6.5, ])
+T2
+```
+
+Since $n > 20$, the critical region is $\{T_1: T_1 \leq t_1 \text{ or } T_2: T_2 > t_2\}$, such that $t_1 = np^* + z_{\frac{\alpha}{2}} \sqrt{np^*(1 - p^*)}$ and $t_2 = np^* + z_{1 - \frac{\alpha}{2}} \sqrt{np^*(1 - p^*)}$.
+
+$$
+\begin{split}
+    T_1 &= \text{number of } x_i \leq 6.5\\
+    T_2 &= \text{number of } x_i < 6.5\\
+    p-value &: min\{2P(y \leq T_1), 2P(y \geq T2)\}\\
+\end{split}
+$$
+
+Finding the P-values, we get
+
+```{r}
+  exact(min(pbinom(q=24, size=50, prob=0.5), (1 - pbinom(q=24, size=50, prob=0.5))))
+```
+
+And since $0.44 > \alpha$, we cannot reject the null hypothesis that 6.5 is not the median.
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+
+
+
+
+
+
 \begin{flushright}
   $\blacksquare$
 \end{flushright}
