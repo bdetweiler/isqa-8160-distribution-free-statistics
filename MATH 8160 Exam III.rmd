@@ -1,0 +1,295 @@
+---
+title: "ISQA 8160 Exam II"
+author: "Brian Detweiler"
+date: "Thursday, July 28, 2016"
+output: pdf_document
+header-includes:
+- \usepackage{bbm}
+- \usepackage[utf8]{inputenc}
+- \usepackage{amsmath}
+- \usepackage{amssymb}
+- \usepackage{color}
+- \usepackage{progressbar}
+- \usepackage{array}
+- \usepackage{tikz}
+- \usepackage{verbatim}
+- \usepackage{color,soul}
+- \usepackage{blkarray}
+- \usepackage[utf8]{inputenc}
+- \usepackage{amssymb}
+- \usepackage{pifont}
+- \usepackage{diagbox}
+- \usepackage{listings}
+- \usepackage{color}
+---
+
+$$
+% Matrix variable boldface
+\newcommand{\matr}[1]{\mathbf{#1}}
+% I seem to typo this a lot, so we'll just alias it
+\newcommand{\fraC}[2]{\frac{#1}{#2}}
+% for repeating values
+\newcommand*\repeating[1]{\overline{#1}}
+\newcommand{\xmark}{\ding{55}}%
+\newcommand\tab[1][1cm]{\hspace*{#1}}
+\newcommand\encircle[1]{%
+  \tikz[baseline=(X.base)] 
+    \node (X) [draw, shape=circle, inner sep=0] {\strut #1};}
+\newcommand{\specialcell}[2][c]{%
+  \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
+\newcommand{\ceil}[1]{\left \lceil #1 \right \rceil }
+\newcommand{\floor}[1]{\left \lfloor #1 \right \rfloor }
+$$
+
+```{r, echo=FALSE}
+exact <- function(a) print(a, digits=nchar(a))
+library('vcdExtra')
+```
+
+# Chapter 4.1
+
+## 4.1 Problem 7.) Exposure to nitrous oxide, an anesthetic, is suspected as a cause for miscarriages among pregnant nurses and dental assistants who sustained prolonged periods of exposure in their occupation. Data are collected from three different groups of pregnant females and it is recorded how many have miscarriages and how many full-term deliveries.
+
+
+\begin{center}
+\begin{tabular}{ l | c c | c || c c | c || c c | c || }
+               & Dental      & Assistants &     & O.R.        & Nurses    &    & Out-Patient & Nurses    & \\
+               & Miscarriage & Full Term  &     & Miscarriage & Full Term &    & Miscarriage & Full Term & \\
+   \hline\hline
+   Exposed     & 8           & 32         & 40  & 3           & 18        & 21 & 0           & 7         & 7 \\
+   Not Exposed & 26          & 210        & 236 & 3           & 21        & 24 & 10          & 75        & 85 \\
+   \hline
+   Totals      & 34          & 242        & 276 & 6           & 39        & 45 & 10          & 82        & 85 \\
+   
+\end{tabular}
+\end{center}
+
+## (a) Use $T_4$, with a correction for continuity when finding the p-value, to investigate this theory.
+
+From the data, we have
+$$
+  \begin{split}
+    H_0 &: P_{1i} \leq P_{2_i}\\
+    H_a &: P_{1i} \geq P_{2_i} \text{ for all } i \text{ and } P_{1i} > P_{2_i} \text{ for some } i\\
+    \alpha &= 0.05\\
+    z_{1 - \alpha} &= z_{0.95} = 1.645\\
+    c &= \{ T_4: T_4 > z_{1 - \alpha} \}\\
+    x_1 &= 8\\
+    x_2 &= 3\\
+    x_3 &= 0\\
+    r_1 &= 40\\
+    r_2 &= 21\\
+    r_3 &= 7\\
+    c_1 &= 34\\
+    c_2 &= 6\\
+    c_3 &= 10\\
+    N_1 &= 276\\
+    N_2 &= 45\\
+    N_3 &= 85\\
+\end{split}
+$$
+
+Using $T4$ and substituting in our values, we get
+$$
+  \begin{split}
+    T_4 &= \frac{\sum x_i - \sum \frac{r_i c_i}{N_i}}{\sqrt{\sum \frac{r_i c_i (N_i - r_i)(N_i - c_i)}{N_i^2(N_i -1)}}}\\
+    &= \frac{(8 + 3 + 0) - \Big(\frac{(40)(34)}{276} + \frac{(21)(6)}{45} + \frac{(7)(10)}{85}\Big)}{\sqrt{\frac{(40)(34) (276 - 40)(276 - 34)}{276^2(276 - 1)} + \frac{(21)(6) (45 - 21)(45 - 6)}{45^2(45 - 1)} + \frac{(7)(10) (85 - 7)(85 - 10)}{85^2(85 - 1)}}}\\
+    &= \frac{11 - \Big(\frac{340}{69} + \frac{14}{5} + \frac{14}{17}\Big)}{\sqrt{\frac{88264}{23805} + \frac{364}{275} + \frac{195}{289}}}\\
+    &= \frac{11 - 8.55106564364}{\sqrt{5.70616932864}}\\
+    &= \frac{2.44893435636}{2.38875895156}\\
+    &= 1.02519107454 \ngtr 1.645\\
+  \end{split}
+$$
+
+Verifying in R,
+```{r}
+x_1 <- 8
+x_2 <- 3
+x_3 <- 0
+r_1 <- 40
+r_2 <- 21
+r_3 <- 7
+c_1 <- 34
+c_2 <- 6
+c_3 <- 10
+N_1 <- 276
+N_2 <- 45
+N_3 <- 85
+
+xi <- c(x_1, x_2, x_3)
+ri <- c(r_1, r_2, r_3)
+ci <- c(c_1, c_2, c_3)
+Ni <- c(N_1, N_2, N_3)
+
+T4 <- function(xi, ri, ci, Ni) {
+  numerator <- sum(xi) - sum(mapply(function(r, c, N) { (r*c)/N }, ri, ci, Ni))
+  denominator <- sqrt(sum(mapply(function(r, c, N) { 
+      (r * c * (N - r) * (N - c)) / (N^2 * (N - 1)) 
+  }, ri, ci, Ni)))
+  
+  numerator/denominator
+}
+
+T4.pval <- function(xi, ri, ci, Ni) {
+  numerator <- sum(xi) - sum(mapply(function(r, c, N) { (r*c)/N }, ri, ci, Ni)) - 0.5
+  denominator <- sqrt(sum(mapply(function(r, c, N) { 
+      (r * c * (N - r) * (N - c)) / (N^2 * (N - 1)) 
+  }, ri, ci, Ni)))
+  
+  numerator/denominator
+}
+
+exact(T4(xi, ri, ci, Ni))
+z.val <- exact(T4.pval(xi, ri, ci, Ni))
+
+exact(1 - pnorm(q=z.val))
+
+```
+
+With a p-value of 0.207, We cannot reject the null hypothesis. Anesthesia appears to have no affect on pregnancy.
+
+\pagebreak 
+
+## (b) Use $T_5$ to test the hypothesis of no miscarriage effect due to exposure to nitrous oxide. Compare the p-value with part (a).
+
+```{r}
+T5 <- function(xi, ri, ci, Ni) {
+  numerator <- sum(xi) - sum(mapply(function(r, c, N) { (r*c)/N }, ri, ci, Ni))
+  denominator <- sqrt(sum(mapply(function(r, c, N) { 
+      (r * c * (N - r) * (N - c)) / (N^3) 
+  }, ri, ci, Ni)))
+  
+  numerator/denominator
+}
+
+T5.pval <- function(xi, ri, ci, Ni) {
+  numerator <- sum(xi) - sum(mapply(function(r, c, N) { (r*c)/N }, ri, ci, Ni)) - 0.5
+  denominator <- sqrt(sum(mapply(function(r, c, N) { 
+      (r * c * (N - r) * (N - c)) / (N^3) 
+  }, ri, ci, Ni)))
+  
+  numerator/denominator
+}
+
+exact(T5(xi, ri, ci, Ni))
+z.val <- exact(T5.pval(xi, ri, ci, Ni))
+
+exact(1 - pnorm(q=z.val))
+```
+
+Notably, the p-value is 0.206, slightly smaller than the 0.207 p-value of $T_4$, but still not significant. 
+
+## (c) Which analysis, using $T_4$ or $T_5$, seems more appropriate in this case?
+
+$T_5$ is more appropriate, because both the samples and the outcomes are random.
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+
+# Chapter 4.2
+
+## 4.2 Problem 4.) Three professors are teaching large classes in introductory statistics. At the end of the semester, they compare grades to see if there are significant differences in their grading policies.
+
+\begin{center}
+\begin{tabular}{ l c c c c c c c }
+ & & & & \textbf{Grade} & & & \\
+\textbf{Professor} & \textbf{A} & \textbf{B} & \textbf{C} & \textbf{D} & \textbf{F} & \textbf{WP} & \textbf{WF}\\
+Smith              & 12         & 45         & 49         & 6          & 13         & 18          & 2 \\
+Jones              & 10         & 32         & 43         & 18         & 4          & 12          & 6 \\
+White              & 15         & 19         & 32         & 20         & 6          & 9           & 7 \\
+\end{tabular}
+\end{center}
+
+## Are these differences significant? Which test are you using? Are the grades assigned by Professors Jones and White significantly different? How would the results be interpreted?
+
+We will use the \textit{Chi-squared Test for Differences in Probablilities, r x c}, with the following hypothesis:
+
+$$
+\begin{split}
+  H_0 &: p_{ij} = p_{2j} = p_{3j}\\
+  H_a &: \text{ Not all are equal }\\
+\end{split}
+$$
+
+
+```{r}
+ Grades <- matrix(data = c(12, 10, 15,
+                           45, 32, 19,
+                           49, 43, 32,
+                            6, 18, 20, 
+                           13,  4,  6,
+                           18, 12,  9,
+                            2,  6,  7),
+                  nrow=3,
+                  ncol=7)
+rownames(Grades) <- c('Smith', 'Jones', 'White')
+colnames(Grades) <- c('A', 'B', 'C', 'D', 'F', 'WP', 'WF')
+Grades
+```
+
+\pagebreak
+
+We obtain our test statistic with
+
+$$
+\begin{split}
+  T &= \sum_{i = 1}^r \sum_{j = 1}^c \frac{(O_{ij} - E_{ij})^2}{E_{ij}} \text{, where } E_{ij} = \frac{n_i C_j}{N}\\
+\end{split}
+$$
+
+```{r}
+rxcT <- function(Matr) {
+  N <- sum(Matr)
+  T_ <- 0
+  for (i in c(1:nrow(Matr))) {
+    
+    ni <- sum(Matr[i,])  
+    
+    for (j in c(1:ncol(Matr))) {
+      Ci <- sum(Matr[,j])
+      Eij <- (ni * Ci) / N
+      
+      Oij <- Matr[i, j]
+      T_ <- T_ + (((Oij - Eij)^2) / Eij)
+    }
+  }
+  
+  T_
+}
+
+rxcT(Grades)
+```
+
+The Chi-squared statistic is given by
+
+```{r}
+  exact(qchisq(p = 0.95, df = ((nrow(Grades) - 1) * (ncol(Grades) - 1))))
+```
+
+And since $T = 28.91509 > 21.026$, we reject the null hypothesis.
+
+As for the grades assigned by Jones and White, we have
+
+```{r}
+# Remove Agent Smith from the Matrix
+Grades <- Grades[-1,]
+
+rxcT(Grades)
+
+# Compute Chi-Square statistic
+exact(qchisq(p = 0.95, df = ((nrow(Grades) - 1) * (ncol(Grades) - 1))))
+```
+
+From this result, we can see that there is not a significant difference between Mr. White and Mr. Jones.
+
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
