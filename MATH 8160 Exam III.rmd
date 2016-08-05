@@ -43,7 +43,6 @@ $$
 
 ```{r, echo=FALSE}
 exact <- function(a) print(a, digits=nchar(a))
-library('vcdExtra')
 ```
 
 # Chapter 4.1
@@ -293,3 +292,358 @@ From this result, we can see that there is not a significant difference between 
 \end{flushright}
 
 \pagebreak
+
+
+# Chapter 4.3
+
+## 4.3, Problem 1): Test the hypothesis that the following samples were obtained from populations having the same medians.
+
+$$
+  \begin{split}
+    \text{Sample 1} &: 35, 42, 42, 30, 15, 31, 29, 29, 17, 21\\
+    \text{Sample 2} &: 34, 38, 26, 17, 42, 28, 35, 33, 16, 40\\
+    \text{Sample 3} &: 17, 29, 30, 36, 41, 30, 31, 23, 38, 30\\
+    \text{Sample 4} &: 39, 34, 22, 27, 42, 33, 24, 36, 29, 25\\
+  \end{split}
+$$
+
+### Perform pairwise comparison for Population Medians. 
+
+$$
+\begin{split}
+  H_0 &: \text{ All populations have the same median}\\
+  H_a &: \text{ At least two populations have different medians}\\
+  T &= \frac{N^2}{ab} \sum_{i = 1}^c \frac{(O_{1i} - \frac{n_i a}{N})^2}{n_i}\\
+  \alpha &= 0.05\\
+  c &= 10\\
+  \chi_{0.95, (c - 1)}^2 &= \chi_{0.95, 9}^2 = 16.91898\\
+  \text{pairwise comparisons } &= \binom{4}{2} = 6\\
+\end{split}
+$$
+```{r}
+ Median.Data <- matrix(data = c(35, 34, 17, 39, 
+                                42, 38, 29, 34, 
+                                42, 26, 30, 22, 
+                                30, 17, 36, 27, 
+                                15, 42, 41, 42, 
+                                31, 28, 30, 33, 
+                                29, 35, 31, 24, 
+                                29, 33, 23, 36, 
+                                17, 16, 38, 29, 
+                                21, 40, 30, 25),
+                  nrow=4,
+                  ncol=10)
+rownames(Median.Data) <- c('Sample 1', 'Sample 2', 'Sample 3', 'Sample 4')
+Median.Data
+```
+
+```{r}
+medianT <- function(Matr) {
+  N <- sum(Matr)
+
+  # sum first row
+  a <- sum(Matr[1,])
+
+  # sum second row
+  b <- sum(Matr[2,])
+
+  
+  T_ <- 0
+  for (i in c(1:ncol(Matr))) {
+    ni <- sum(Matr[, i])
+      
+    O1i <- Matr[[1, i]]
+
+    
+    T_ <- T_ + ( ((O1i - ((ni * a) / N))^2) / ni)
+    
+  }
+  
+  T_ <- (N^2 / (a * b)) * T_
+  T_
+}
+
+medianT(Median.Data[c(1,2), ])
+medianT(Median.Data[c(1,3), ])
+medianT(Median.Data[c(1,4), ])
+medianT(Median.Data[c(2,3), ])
+medianT(Median.Data[c(2,4), ])
+medianT(Median.Data[c(3,4), ])
+```
+Clearly, $T > 16.91898$ for all pairwise comparisons except Samples 2 and 4. So we reject the null hypothesis. At least two populations have different medians.
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+# Chapter 4.4
+
+## 4.4, Problem 1): One hundred married couples were interviewed, and the husband and wife were asked separately for their first choice for the next U.S. president, with the following results.
+
+\begin{center}
+\begin{tabular}{ c c | c | c | c | }
+               & & Wife's Choice & & \\
+               & & A & B & Other \\
+               \hline
+               & A & 12 & 22 & 6 \\
+               \hline
+               Husband's Choice & B & 25 & 21 & 4 \\
+               \hline
+               & Other & 3 & 7 & 0 \\
+               \hline
+\end{tabular}
+\end{center}
+
+## Compute the following.
+
+## (a) T
+
+```{r}
+ Presidents <- matrix(data = c(12, 25, 3,
+                               22, 21, 7,
+                               6, 4, 0),
+                  nrow=3,
+                  ncol=3)
+rownames(Presidents) <- c('A', 'B', 'Other')
+colnames(Presidents) <- c('A', 'B', 'Other')
+Presidents
+exact(rxcT(Presidents))
+```
+
+$$
+  \begin{split}
+    T &= 6.34
+  \end{split}
+$$
+
+## (b) Cram\'{e}r's coefficient
+
+```{r}
+R1 <- function(Matr) {
+  T <- rxcT(Matr)
+  N <- sum(Matr)
+  q <- min(dim(Matr))
+  
+  R1 <- T / (N * (q - 1))
+  R1
+}
+
+cramers <- function(Matr) {
+  sqrt(R1(Matr))
+}
+
+cramers(Presidents)
+```
+
+## (c) $R_1$
+
+```{r}
+R1(Presidents)
+```
+
+
+## (d) $R_2$
+
+```{r}
+R2 <- function(Matr) {
+  T <- rxcT(Matr)
+  N <- sum(Matr)
+  sqrt(T / (N + T))
+}
+
+R2(Presidents)
+```
+
+
+## (e) $R_3$
+
+```{r}
+R3 <- function(Matr) {
+  T <- rxcT(Matr)
+  N <- sum(Matr)
+  T/N
+}
+
+R2(Presidents)
+```
+
+## (f) $R_4$
+
+```{r}
+R4 <- function(Matr) {
+  T <- rxcT(Matr)
+  N <- sum(Matr)
+  r <- dim(Matr)[1]
+  c <- dim(Matr)[2]
+  sqrt(T / (N * sqrt( (r - 1) * (c - 1) ) ))
+}
+
+R4(Presidents)
+
+```
+
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+
+# Chapter 4.5
+
+## 4.5 Problem 1.) Test the following data to see if they could have come from a popuilation whose values are uniformly distributed between 0.0000 and 0.9999. 
+
+\begin{center}
+\begin{tabular}{ c c c c c }
+  0.4755 & 0.2186 & 0.5112 & 0.3826 & 0.5758 \\
+  0.4274 & 0.4295 & 0.5233 & 0.7500 & 0.5484 \\
+  0.6454 & 0.8620 & 0.5482 & 0.5926 & 0.5440 \\
+  0.2484 & 0.5758 & 0.9145 & 0.6687 & 0.3007 \\
+  0.6521 & 0.5456 & 0.5101 & 0.3607 & 0.3943 \\
+  0.3979 & 0.4438 & 0.6328 & 0.9056 & 0.8283 \\
+  0.4352 & 0.5381 & 0.5646 & 0.4102 & 0.5689 \\
+  0.7297 & 0.8757 & 0.8230 & 0.8432 & 0.4396 \\
+  0.5337 & 0.5498 & 0.9096 & 0.3768 & 0.4403 \\
+  0.8522 & 0.4004 & 0.2595 & 0.8008 & 0.3686 \\
+  0.4995 & 0.8403 & 0.4993 & 0.8312 & 0.4295 \\
+  0.3003 & 0.4887 & 0.4067 & 0.2172 & 0.2925 \\
+  0.3900 & 0.7979 & 0.9763 & 0.3003 & 0.2172 \\
+  0.5274 & 0.6793 & 0.2113 & 0.5166 & 0.4632 \\
+  0.5590 & 0.5836 & 0.9329 & 0.4579 & \\
+\end{tabular}
+\end{center}
+
+$$
+\begin{split}
+  H_0 &: P(X \text{ is in class } j) = p_j^* \text { for } 1, \hdots, c\\
+  H_a &: P(X \text{ is in class } j) \neq p_j^* \text { for at least 1 class} 1, \hdots, c\\
+\end{split}
+$$
+
+```{r}
+ch45 <- c(0.4755, 0.2186, 0.5112, 0.3826, 0.5758, 
+          0.4274, 0.4295, 0.5233, 0.7500, 0.5484, 
+          0.6454, 0.8620, 0.5482, 0.5926, 0.5440, 
+          0.2484, 0.5758, 0.9145, 0.6687, 0.3007, 
+          0.6521, 0.5456, 0.5101, 0.3607, 0.3943, 
+          0.3979, 0.4438, 0.6328, 0.9056, 0.8283, 
+          0.4352, 0.5381, 0.5646, 0.4102, 0.5689, 
+          0.7297, 0.8757, 0.8230, 0.8432, 0.4396, 
+          0.5337, 0.5498, 0.9096, 0.3768, 0.4403, 
+          0.8522, 0.4004, 0.2595, 0.8008, 0.3686, 
+          0.4995, 0.8403, 0.4993, 0.8312, 0.4295, 
+          0.3003, 0.4887, 0.4067, 0.2172, 0.2925, 
+          0.3900, 0.7979, 0.9763, 0.3003, 0.2172, 
+          0.5274, 0.6793, 0.2113, 0.5166, 0.4632, 
+          0.5590, 0.5836, 0.9329, 0.4579)
+```
+
+\pagebreak
+
+Let's break this down into buckets based on the tenths place value and generate a frequency table.
+
+```{r}
+tens <- table(unlist(lapply(ch45, function(x) { floor (x * 10)})))
+tens
+```
+
+The test stastic we'll use is given by the following formula:
+
+$$
+\begin{split}
+  T &= \sum_{j = 1}^c \frac{(O_j - E_j)^2}{E_j}\\
+\end{split}
+$$
+
+where $c$ is the number of classes with observed frequencies, the expected value, $E_j = p_j^* N$, and $N$ is the total count of observations. We'll use this to create our goodness-of-fit function.
+
+```{r}
+# Takes a vector of observations and the test population probability
+goodness.of.fit <- function(data, p) {
+  # Create a DataFrame from our observations
+  data.df <- as.data.frame(table(data))
+  
+  # Test statistic
+  T_ <- 0
+  
+  # Total number of observations
+  N <- length(data)
+  
+  # Total number of classes (unique observation values)
+  C <- length(data.df$Freq)
+  
+  for (j in c(1:C)) {
+    Ej <- p * N
+    Oj <- as.numeric(levels(data.df$data)[j])
+    
+    T_ <- T_ + ((Oj - Ej)^2 / Ej)
+  }
+  
+  print(paste('N = ', N))
+  print(paste('c = ', C))
+  print(paste('T = ', exact(T_)))
+}
+```
+
+## (a) Do test of Uniform and Normal distribution
+
+We can now execute our function and compare it with $\chi_{(1 - \alpha), (c - 1)}^2$
+
+```{r}
+p <- 1 / 9
+
+goodness.of.fit(tens, p)
+qchisq(p=0.95, df=length(tens))
+
+```
+
+$T > \chi^2$, so we reject $H_0$. The data are not distributed uniformly.
+
+```{r}
+qqnorm(ch45)
+```  
+
+\pagebreak
+
+## (b) Using Descriptive Statistics, Explore in SPSS perform K-S test (Lilliefors test) and Shapiro Wilk test for Normality.
+
+```{r}
+ks.test(ch45, y=c('pnorm'), alternative=c('two.sided'))
+shapiro.test(ch45)
+```
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+# Chapter 4.6
+
+## 4.6, Problem 1). The relative effectiveness of two different sales techniques was tested on 12 volunteer housewives. Each housewife was exposed to each sales technique and asked to buy a certain product, the same product in all cases. At the end of each exposure, each housewife rated the technique with a 1 if she felt she would have agreed to buy the product and a 0 if she probably would not have bought the product.
+
+\begin{center}
+  \textbf{Housewife}
+\end{center}
+
+\begin{center}
+\begin{tabular}{ l c c c c c c c c c c c c }
+  
+              & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12\\
+  Technique 1 & 1 & 1 & 1 & 1 & 1 & 0 & 0 & 0 & 1 & 1  & 0  & 1 \\
+  Technique 2 & 0 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 1 & 0  & 0  & 1 \\
+\end{tabular}
+\end{center}
+
+## (a) Use Cochran's test.
+
+## (b) Rearrange the data and use McNemar's teset in the large sample form suggested by Equation 3.5.1.
+
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
