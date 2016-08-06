@@ -43,6 +43,7 @@ $$
 
 ```{r, echo=FALSE}
 exact <- function(a) print(a, digits=nchar(a))
+library(nortest)
 ```
 
 # Chapter 4.1
@@ -58,7 +59,7 @@ exact <- function(a) print(a, digits=nchar(a))
    Exposed     & 8           & 32         & 40  & 3           & 18        & 21 & 0           & 7         & 7 \\
    Not Exposed & 26          & 210        & 236 & 3           & 21        & 24 & 10          & 75        & 85 \\
    \hline
-   Totals      & 34          & 242        & 276 & 6           & 39        & 45 & 10          & 82        & 85 \\
+   Totals      & 34          & 242        & 276 & 6           & 39        & 45 & 10          & 82        & 92 \\
    
 \end{tabular}
 \end{center}
@@ -84,7 +85,7 @@ $$
     c_3 &= 10\\
     N_1 &= 276\\
     N_2 &= 45\\
-    N_3 &= 85\\
+    N_3 &= 92\\
 \end{split}
 $$
 
@@ -92,11 +93,11 @@ Using $T4$ and substituting in our values, we get
 $$
   \begin{split}
     T_4 &= \frac{\sum x_i - \sum \frac{r_i c_i}{N_i}}{\sqrt{\sum \frac{r_i c_i (N_i - r_i)(N_i - c_i)}{N_i^2(N_i -1)}}}\\
-    &= \frac{(8 + 3 + 0) - \Big(\frac{(40)(34)}{276} + \frac{(21)(6)}{45} + \frac{(7)(10)}{85}\Big)}{\sqrt{\frac{(40)(34) (276 - 40)(276 - 34)}{276^2(276 - 1)} + \frac{(21)(6) (45 - 21)(45 - 6)}{45^2(45 - 1)} + \frac{(7)(10) (85 - 7)(85 - 10)}{85^2(85 - 1)}}}\\
-    &= \frac{11 - \Big(\frac{340}{69} + \frac{14}{5} + \frac{14}{17}\Big)}{\sqrt{\frac{88264}{23805} + \frac{364}{275} + \frac{195}{289}}}\\
-    &= \frac{11 - 8.55106564364}{\sqrt{5.70616932864}}\\
-    &= \frac{2.44893435636}{2.38875895156}\\
-    &= 1.02519107454 \ngtr 1.645\\
+    &= \frac{(8 + 3 + 0) - \Big(\frac{(40)(34)}{276} + \frac{(21)(6)}{45} + \frac{(7)(10)}{92}\Big)}{\sqrt{\frac{(40)(34) (276 - 40)(276 - 34)}{276^2(276 - 1)} + \frac{(21)(6) (45 - 21)(45 - 6)}{45^2(45 - 1)} + \frac{(7)(10) (92 - 7)(92 - 10)}{92^2(92 - 1)}}}\\
+    &= \frac{11 - \Big(\frac{340}{69} + \frac{14}{5} + \frac{35}{46}\Big)}{\sqrt{\frac{88264}{23805} + \frac{364}{275} + \frac{17425}{6348}}}\\
+    &= \frac{11 - 8.4884057971}{\frac{1}{7590} \cdot \sqrt{447982931}}\\
+    &= \frac{2.5115942029}{2.78861755829}\\
+    &= 0.900659251547 \ngtr 1.645\\
   \end{split}
 $$
 
@@ -113,7 +114,7 @@ c_2 <- 6
 c_3 <- 10
 N_1 <- 276
 N_2 <- 45
-N_3 <- 85
+N_3 <- 92
 
 xi <- c(x_1, x_2, x_3)
 ri <- c(r_1, r_2, r_3)
@@ -130,18 +131,21 @@ T4 <- function(xi, ri, ci, Ni) {
 }
 
 T4.pval <- function(xi, ri, ci, Ni) {
-  numerator <- sum(xi) - sum(mapply(function(r, c, N) { (r*c)/N }, ri, ci, Ni)) - 0.5
+  numerator <- sum(xi) - sum(mapply(function(r, c, N) { (r*c)/N }, ri, ci, Ni))
   denominator <- sqrt(sum(mapply(function(r, c, N) { 
       (r * c * (N - r) * (N - c)) / (N^2 * (N - 1)) 
   }, ri, ci, Ni)))
   
-  numerator/denominator
+  (numerator - 0.5)/denominator
 }
 
-exact(T4(xi, ri, ci, Ni))
-z.val <- exact(T4.pval(xi, ri, ci, Ni))
+T4.val <- exact(T4(xi, ri, ci, Ni))
+print(paste('T4 = ', T4.val))
 
-exact(1 - pnorm(q=z.val))
+z.val <- exact(T4.pval(xi, ri, ci, Ni))
+p.val <- exact(1 - pnorm(q=z.val))
+
+print(paste('p-value = ', p.val))
 
 ```
 
@@ -158,16 +162,16 @@ T5 <- function(xi, ri, ci, Ni) {
       (r * c * (N - r) * (N - c)) / (N^3) 
   }, ri, ci, Ni)))
   
-  numerator/denominator
+  numerator / denominator
 }
 
 T5.pval <- function(xi, ri, ci, Ni) {
-  numerator <- sum(xi) - sum(mapply(function(r, c, N) { (r*c)/N }, ri, ci, Ni)) - 0.5
+  numerator <- sum(xi) - sum(mapply(function(r, c, N) { (r*c)/N }, ri, ci, Ni))
   denominator <- sqrt(sum(mapply(function(r, c, N) { 
       (r * c * (N - r) * (N - c)) / (N^3) 
   }, ri, ci, Ni)))
   
-  numerator/denominator
+  (numerator) / denominator
 }
 
 exact(T5(xi, ri, ci, Ni))
@@ -176,7 +180,7 @@ z.val <- exact(T5.pval(xi, ri, ci, Ni))
 exact(1 - pnorm(q=z.val))
 ```
 
-Notably, the p-value is 0.206, slightly smaller than the 0.207 p-value of $T_4$, but still not significant. 
+Notably, the p-value is 0.14459282766611858, which is smaller than the p-value of $T_4$, but still not significant. 
 
 ## (c) Which analysis, using $T_4$ or $T_5$, seems more appropriate in this case?
 
@@ -335,6 +339,29 @@ $$
                   ncol=10)
 rownames(Median.Data) <- c('Sample 1', 'Sample 2', 'Sample 3', 'Sample 4')
 Median.Data
+
+med <- median(Median.Data)
+med
+
+# Get the count in our samples that are greater than or less-than-or-equal-to our median
+s1_gtr <- length(unlist(lapply(Median.Data[1, ], function(x) { if (x > med) x})))
+s1_lte <- length(unlist(lapply(Median.Data[1, ], function(x) { if (x <= med) x})))
+s2_gtr <- length(unlist(lapply(Median.Data[2, ], function(x) { if (x > med) x})))
+s2_lte <- length(unlist(lapply(Median.Data[2, ], function(x) { if (x <= med) x})))
+s3_gtr <- length(unlist(lapply(Median.Data[3, ], function(x) { if (x > med) x})))
+s3_lte <- length(unlist(lapply(Median.Data[3, ], function(x) { if (x <= med) x})))
+s4_gtr <- length(unlist(lapply(Median.Data[4, ], function(x) { if (x > med) x})))
+s4_lte <- length(unlist(lapply(Median.Data[4, ], function(x) { if (x <= med) x})))
+
+Median.Test.Data <- t(matrix(data = c(s1_gtr, s2_gtr, s3_gtr, s4_gtr,
+                                      s1_lte, s2_lte, s3_lte, s4_lte),
+                             nrow=4,
+                             ncol=2))
+
+colnames(Median.Test.Data) <- c('Sample 1', 'Sample 2', 'Sample 3', 'Sample 4')
+rownames(Median.Test.Data) <- c('> Median', '<= Median')
+
+Median.Test.Data
 ```
 
 ```{r}
@@ -363,14 +390,18 @@ medianT <- function(Matr) {
   T_
 }
 
-medianT(Median.Data[c(1,2), ])
-medianT(Median.Data[c(1,3), ])
-medianT(Median.Data[c(1,4), ])
-medianT(Median.Data[c(2,3), ])
-medianT(Median.Data[c(2,4), ])
-medianT(Median.Data[c(3,4), ])
+exact(qchisq(p = 0.95, df = (ncol(Median.Test.Data) - 1)))
+
+T_ <- medianT(Median.Test.Data)
+p.val <- pchisq(T_, df=1, lower = FALSE)
+
+print(paste('T = ', T_))
+print(paste('p-value = ', p.val))
+
 ```
-Clearly, $T > 16.91898$ for all pairwise comparisons except Samples 2 and 4. So we reject the null hypothesis. At least two populations have different medians.
+
+Clearly, $T < 1.10275689223058$, so we cannot reject the null hypothesis. All populations appear to have the same median.
+
 \begin{flushright}
   $\blacksquare$
 \end{flushright}
@@ -418,15 +449,15 @@ $$
   \end{split}
 $$
 
-## (b) Cram\'{e}r's coefficient
+## (b) Cramer's coefficient
 
 ```{r}
 R1 <- function(Matr) {
-  T <- rxcT(Matr)
+  T_ <- rxcT(Matr)
   N <- sum(Matr)
   q <- min(dim(Matr))
   
-  R1 <- T / (N * (q - 1))
+  R1 <- T_ / (N * (q - 1))
   R1
 }
 
@@ -448,9 +479,9 @@ R1(Presidents)
 
 ```{r}
 R2 <- function(Matr) {
-  T <- rxcT(Matr)
+  T_ <- rxcT(Matr)
   N <- sum(Matr)
-  sqrt(T / (N + T))
+  sqrt(T_ / (N + T_))
 }
 
 R2(Presidents)
@@ -461,23 +492,23 @@ R2(Presidents)
 
 ```{r}
 R3 <- function(Matr) {
-  T <- rxcT(Matr)
+  T_ <- rxcT(Matr)
   N <- sum(Matr)
-  T/N
+  T_/N
 }
 
-R2(Presidents)
+R3(Presidents)
 ```
 
 ## (f) $R_4$
 
 ```{r}
 R4 <- function(Matr) {
-  T <- rxcT(Matr)
+  T_ <- rxcT(Matr)
   N <- sum(Matr)
   r <- dim(Matr)[1]
   c <- dim(Matr)[2]
-  sqrt(T / (N * sqrt( (r - 1) * (c - 1) ) ))
+  sqrt(T_ / (N * sqrt( (r - 1) * (c - 1) ) ))
 }
 
 R4(Presidents)
@@ -594,7 +625,8 @@ goodness.of.fit <- function(data, p) {
 We can now execute our function and compare it with $\chi_{(1 - \alpha), (c - 1)}^2$
 
 ```{r}
-p <- 1 / 9
+# Probability of a uniform is 1/(d-c). In our case, c = 0, d = 9.
+p <- 1 / (9 - 0)
 
 goodness.of.fit(tens, p)
 qchisq(p=0.95, df=length(tens))
@@ -603,18 +635,47 @@ qchisq(p=0.95, df=length(tens))
 
 $T > \chi^2$, so we reject $H_0$. The data are not distributed uniformly.
 
+To test for normality, we can use the _nortest_ package, which contains several tests for normality, including Pearson's Chi-squared.
+
+$$
+  \begin{split}
+    H_0 &: \text{ The data originate from a normal population }\\
+    H_a &: \text{ The data are not normally distributed }
+  \end{split}
+$$
+
+
 ```{r}
-qqnorm(ch45)
-```  
+pearson.test(ch45)
+```
+
+We reject the null hypothesis with a p-value of 0.01404 < 0.05. The data do not originate from a normal population. However, we cannot say what distribution, if any, the data follow.
 
 \pagebreak
 
 ## (b) Using Descriptive Statistics, Explore in SPSS perform K-S test (Lilliefors test) and Shapiro Wilk test for Normality.
 
+$$
+  \begin{split}
+    H_0 &: \text{ The data originate from a normal population }\\
+    H_a &: \text{ The data are not normally distributed }
+  \end{split}
+$$
+
+It can be useful to visualize the data on a Q-Q plot as a sanity check. 
+
 ```{r}
-ks.test(ch45, y=c('pnorm'), alternative=c('two.sided'))
+qqnorm(ch45)
+```
+
+Our sample does not look normal, but let's verify this with a few more tests.
+
+```{r}
+lillie.test(ch45)
 shapiro.test(ch45)
 ```
+
+Both Lilliefors K-S test for normality and the Shapiro-Wilks test return p-values < 0.05. Therefore, we reject the null hypothesis that the data originate from a normal population. However, we cannot say what distribution, if any, the data follow.
 
 \begin{flushright}
   $\blacksquare$
@@ -632,7 +693,6 @@ shapiro.test(ch45)
 
 \begin{center}
 \begin{tabular}{ l c c c c c c c c c c c c }
-  
               & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12\\
   Technique 1 & 1 & 1 & 1 & 1 & 1 & 0 & 0 & 0 & 1 & 1  & 0  & 1 \\
   Technique 2 & 0 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 1 & 0  & 0  & 1 \\
@@ -641,8 +701,131 @@ shapiro.test(ch45)
 
 ## (a) Use Cochran's test.
 
-## (b) Rearrange the data and use McNemar's teset in the large sample form suggested by Equation 3.5.1.
+We'll write our own function for Cochran's Test, using the following test statistic:
+$$
+  \begin{split}
+    T &= c(c - 1) \frac{\sum_{j = 1}^c\bigg(C_j - \frac{N}{c}\bigg)^2}{\sum_{i = 1}^r R_i (c - R_i)}
+  \end{split}
+$$
 
+$$
+  \begin{split}
+    H_0 &: \text{ The treatments are equally effective }\\
+    H_a &: \text{ There are differences in effectiveness among the treatments }
+  \end{split}
+$$
+
+```{r}
+# Runs Cochran's test for related observations on a matrix
+cochran <- function(Matr) {
+  c <- ncol(Matr)
+  r <- nrow(Matr)
+  N <- sum(Matr)
+    
+  numerator <- 0
+  for (j in 1:c) {
+    Cj <- sum(Matr[, j])
+    numerator <- numerator + (Cj - (N/c))^2 
+  }
+  
+  denominator <- 0
+  for (i in 1:r) {
+    Ri <- sum(Matr[i, ])
+    denominator <- denominator + (Ri * (c - Ri))
+  }
+
+  T_ <- c * (c - 1) * (numerator / denominator)
+  p.val <- pchisq(T_, df=(c - 1), lower = FALSE)
+  
+  print(paste('T: ', exact(T_)))
+  print(paste('p-value: ', exact(p.val)))
+}
+
+
+```
+
+```{r}
+Housewives <- matrix(data = c(1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1,
+                              0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1),
+                     nrow=12,
+                     ncol=2)
+colnames(Housewives) <- c('Treatment 1', 'Treatment 2')
+rownames(Housewives) <- c('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12')
+Housewives
+
+cochran(Housewives)
+
+exact(qchisq(p = 0.95, df = (ncol(Housewives) - 1)))
+```
+
+With $T = 4 > 3.841458820694124$, we reject the null hypothesis. The sales techniques do not seem to be equally effective.
+
+## (b) Rearrange the data and use McNemar's test in the large sample form suggested by Equation 3.5.1.
+
+
+```{r}
+mcnemar <- function(Matr) {
+  a <- Matr[1, 1]
+  b <- Matr[1, 2]
+  c <- Matr[2, 1]
+  d <- Matr[2, 2]
+  
+  T_ <- ((b - c)^2)/(b + c)
+  p.val <- pchisq(T_, df=1, lower = FALSE)
+  
+  print(paste('T = ', exact(T_)))
+  print(paste('p-value = ', exact(p.val)))
+}
+```
+
+```{r}
+Housewives.McNemar <- t(matrix(data = c(4, 0,
+                                        4, 4),
+                       nrow=2,
+                       ncol=2))
+rownames(Housewives.McNemar) <- c('0', '1')
+colnames(Housewives.McNemar) <- c('0', '1')
+Housewives.McNemar
+
+mcnemar(Housewives.McNemar)
+
+exact(qchisq(p = 0.95, df = (ncol(Housewives.McNemar) - 1)))
+```
+
+Notice, we get the same results as in *(a)*. This is because mathematically, Cochran's test is equal to McNemar's test for $c = 2$. 
+
+We once again reject the null hypothesis, and confirm that there is a difference in the techniques.
+
+## (c) Ignore the blocking effect in this experiment and treat the data as if 24 different housewives were used. Analyze the data using the test for differences in probabilities given in Section 4.1. Compare with Cochran's test and discuss. 
+
+$$
+  \begin{split}
+    H_0 &: p_1 = p_2\\
+    H_a &: p_1 \neq p_2\\
+    T_1 &= \frac{\sqrt{N} (O_{11} O_{22} - O_{12} O_{21})}{\sqrt{n_1 n_2 C_1 C_2}}\\
+  \end{split}
+$$
+
+```{r}
+Housewives.ChiSq <- t(matrix(data = c(8, 4,
+                                      4, 8),
+                                      
+                       nrow=2,
+                       ncol=2))
+rownames(Housewives.ChiSq) <- c('Success', 'Fail')
+colnames(Housewives.ChiSq) <- c('Treatment 1', 'Treatment 2')
+Housewives.ChiSq
+
+T_ <- rxcT(Housewives.ChiSq)
+print(paste('T = ', T_))
+
+exact(qchisq(p = 0.95, df = (ncol(Housewives.ChiSq) - 1)))
+
+p.val <- pchisq(T_, df=1, lower = FALSE)
+print(paste('p-value = ', p.val))
+```
+
+Since $T = 2.6\overline{6} \ngtr 3.841458820694124$, we cannot reject the null hypothesis here. But this is the same data, right? No. By combining the data, we lose fidelity (information), and in a more mathematical sense, we lose power on this test due to the removal of the blocking.
 
 \begin{flushright}
   $\blacksquare$
