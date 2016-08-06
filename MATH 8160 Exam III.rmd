@@ -1,7 +1,7 @@
 ---
-title: "ISQA 8160 Exam II"
+title: "ISQA 8160 Exam III"
 author: "Brian Detweiler"
-date: "Thursday, July 28, 2016"
+date: "Tuesday, August 9, 2016"
 output: pdf_document
 header-includes:
 - \usepackage{bbm}
@@ -400,7 +400,7 @@ print(paste('p-value = ', p.val))
 
 ```
 
-Clearly, $T < 1.10275689223058$, so we cannot reject the null hypothesis. All populations appear to have the same median.
+Clearly, $T \ngtr 1.10275689223058$, so we cannot reject the null hypothesis. All populations appear to have the same median.
 
 \begin{flushright}
   $\blacksquare$
