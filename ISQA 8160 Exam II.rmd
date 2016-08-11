@@ -1,0 +1,1001 @@
+---
+title: "ISQA 8160 Exam II"
+author: "Brian Detweiler"
+date: "Thursday, July 28, 2016"
+output: pdf_document
+header-includes:
+- \usepackage{bbm}
+- \usepackage[utf8]{inputenc}
+- \usepackage{amsmath}
+- \usepackage{amssymb}
+- \usepackage{color}
+- \usepackage{progressbar}
+- \usepackage{array}
+- \usepackage{tikz}
+- \usepackage{verbatim}
+- \usepackage{color,soul}
+- \usepackage{blkarray}
+- \usepackage[utf8]{inputenc}
+- \usepackage{amssymb}
+- \usepackage{pifont}
+- \usepackage{diagbox}
+- \usepackage{listings}
+- \usepackage{color}
+---
+
+$$
+% Matrix variable boldface
+\newcommand{\matr}[1]{\mathbf{#1}}
+% I seem to typo this a lot, so we'll just alias it
+\newcommand{\fraC}[2]{\frac{#1}{#2}}
+% for repeating values
+\newcommand*\repeating[1]{\overline{#1}}
+\newcommand{\xmark}{\ding{55}}%
+\newcommand\tab[1][1cm]{\hspace*{#1}}
+\newcommand\encircle[1]{%
+  \tikz[baseline=(X.base)] 
+    \node (X) [draw, shape=circle, inner sep=0] {\strut #1};}
+\newcommand{\specialcell}[2][c]{%
+  \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
+\newcommand{\ceil}[1]{\left \lceil #1 \right \rceil }
+\newcommand{\floor}[1]{\left \lfloor #1 \right \rfloor }
+$$
+
+```{r, echo=FALSE}
+exact <- function(a) print(a, digits=nchar(a))
+```
+
+# Chapter 3.1
+
+## 3.1 Problem 6.) A civic group reported to the town council that at least 60\% of the town residents were in favor of a particular bond issue. The town council then asked a random sample of 100 residents if they were in favor of the bond issue. Forty-eight said yes. Is the report of the civic group reasonable?
+
+We have the following:
+$$
+\begin{split}
+    p &= 0.60\\
+    p^{*} &= 0.48\\
+    n &= 100\\
+    \alpha &= 0.05\\
+\end{split}
+$$
+
+The null hypothesis is that the sample probability is representative of a population probability of 60%. The alternative hypothesis is that they are not equal.
+
+$$
+\begin{split}
+    H_0 &: p = p^*\\
+    H_a &: p \neq p^*\\
+    c &= \{T : T \leq np^* + z_{\frac{\alpha}{2}}\sqrt{np^*(1 - p^*)} \text { or } T > np^* + z_{1 - \frac{\alpha}{2}} \sqrt{np^*(1 - p^*)}\\
+\end{split}
+$$
+
+```{r, echo=FALSE}
+# Suppress version warnings
+options(warn=-1)
+```
+
+```{r, echo=FALSE}
+library(binom)
+```
+
+```{r}
+trials <- 100
+successes <- 48
+probability <- 0.60
+alpha <- 0.05
+conf.level <- 1 - alpha
+n <- c(0:trials)
+
+n <- seq(0, trials, by=1)
+barplot(pbinom(n, trials, probability), names.arg=n, 
+        xlab=paste(paste(paste('Cumulative Binom(', trials), probability, sep=','), ')'))
+
+binom.test(x=successes, n=trials, p=probability, alternative=c('two.sided'), conf.level=(conf.level))
+```
+
+And thus we reject the null hypothesis with a p-value of 0.01844 and a 95% confidence interval of (0.3790055, 0.5822102). The population mean appears to be less than 60%.
+
+Alternatively, we can use normal approximation to the binomial,
+
+$$
+\begin{split}
+  T &= 48\\
+  T &\leq 100(0.60) + 1.96 \cdot \sqrt{100*(0.60)(0.40)}\\
+  48 &\leq 69.602\\ 
+\end{split}
+$$
+
+```{r}
+
+```
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+## 3.1 Problem 7.) Out of 20 recent takeover attempts, 5 were successfully resisted byt the companies being taken over. Assume these are independent events, and estimate the probability of a takeover attempt being successfully resisted. That is, find a 95% confidence interval.
+
+Setting up this problem we have the following values:
+$$
+\begin{split}
+    n &= 20\\
+    x &= 5\\
+\end{split}
+$$
+
+We can find the confidence interval using the binom.test like before:
+
+```{r}
+binom.test(x=5, n=20, alternative=c('two.sided'), conf.level=0.95)
+```
+
+### (a) Use Table A4.
+
+*Table A4* confirms the 95% confidence interval as (0.087, 0.491).
+
+### (b) Use Table A1.
+
+Although $n = 20$ is a smaller sample size than we generally require for using the normal distribution, we can nevertheless use it to obtain a slightly less accurate answer:
+
+$$
+\begin{split}
+    L &= \frac{Y}{n} - z_{1-\frac{\alpha}{2}} \sqrt{\frac{Y(n - Y)}{n^3}}\\
+    U &= \frac{Y}{n} + z_{1-\frac{\alpha}{2}} \sqrt{\frac{Y(n - Y)}{n^3}}\\
+\end{split}
+$$
+
+The z-value at $z_{1 - \frac{0.05}{2}} = z_{0.975}$ is 1.96. Plugging in our values, we get
+
+```{r}
+L <- (5/20) - 1.96 * sqrt((20 * (20 - 5)) / (20^3))
+U <- (5/20) + 1.96 * sqrt((20 * (20 - 5)) / (20^3))
+print(paste(paste(paste(paste('(', L),  ', '), U), ')'))
+```
+
+Clearly, with such a small sample size, the normal approximation will not return accurate results.
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+# Chapter 3.2
+
+## 3.2 Problem 1.) A random sample of tenth-grade boys resulted in the following 20 observed weights.
+
+\begin{center}
+\begin{tabular}{ c c c c c}
+  142 & 134 & 98  & 119 & 131\\
+  103 & 154 & 122 & 93  & 137\\
+  86  & 119 & 161 & 144 & 158\\
+  165 & 81  & 117 & 128 & 103\\
+\end{tabular}
+\end{center}
+
+## Test the hypothesis that the median weight is 103.
+
+Let's first order the data.
+```{r}
+weights <- sort(c(142, 134, 98,  119, 131,
+                  103, 154, 122, 93,  137,
+                  86,  119, 161, 144, 158, 
+                  165, 81,  117, 128, 103))
+weights.df <- as.data.frame(weights)
+weights.df
+```
+We will test the hypothesis that $x_{0.50} = 103$ with $\alpha = 0.05$.
+
+$$
+\begin{split}
+    H_0 &: p = p^*\\
+    H_a &: p \neq p^*\\
+    x^* &= 103\\
+    T_1 &= \text{number of } x_i \leq x^*\\
+    T_2 &= \text{number of } x_i < x^*\\
+\end{split}
+$$
+
+```{r}
+T1 <- length(weights.df[weights.df$weights <= 103, ])
+T1
+T2 <- length(weights.df[weights.df$weights < 103, ])
+T2
+```
+
+Since $n \leq 20$, the critical region is $c = \{T_1 \leq t_1, T_2 \geq t_2\}$, such that $P(y \leq t_1) = \frac{\alpha}{2}$ and $P(y \leq t_2) = 1 - \frac{\alpha}{2}$.
+
+$$
+\begin{split}
+    T_1 &= \text{number of } x_i \leq 103 = 6\\
+    T_2 &= \text{number of } x_i < 103 = 4\\
+    c &= \{6 \leq t_1 \text{ or } 4 > t_2\}\\
+    P(y \leq t_1) &= 0.025\\
+    P(y \leq t_2) &= 0.975\\
+\end{split}
+$$
+
+```{r}
+trials <- 20
+probability <- 0.50
+alpha <- 0.05
+left.crit.region <- alpha / 2
+right.crit.region <- 1 - (alpha / 2)
+```
+
+```{r, echo=FALSE}
+n <- seq(0, trials, by=1)
+barplot(pbinom(n, trials, probability), names.arg=n, xlab=paste(paste(paste('Cumulative Binom(', trials), probability, sep=','), ')'))
+```
+
+```{r}
+
+# binomsum(start, end, n, p)
+# Gives a cumulative sum of the binomial from start to end, for n trials with p probability
+binomsum <- function(start, end, n, p) sum(dbinom(x=c(start:end), size=n, prob=p))
+
+# cumsums is a list of the cumulative probability at each point
+cumsums <- list(mapply(binomsum, 0, c(0:trials), trials, probability))
+
+# gives a TRUE/FALSE list where values are <= alpha/2
+left.tail <- lapply(cumsums, function(x) x <= left.crit.region)
+
+# gives a TRUE/FALSE list where values are >= 1 - (alpha / 2)
+right.tail <- lapply(cumsums, function(x) x >= right.crit.region)
+
+# Table sums up values
+left.tail.table <- table(left.tail)
+right.tail.table <- table(right.tail)
+
+# Note that zero is counted in here, so we must subtract 1, otherwise we get
+# the value that sits outside outside of the range
+t1 <- as.data.frame(left.tail.table[names(left.tail.table) == T])[1, 1] - 1
+t1
+
+# Zero is counted in here, so we need to add one to get the value we're looking for
+# Also, recall we want t2 s.t. P(y <= t2) = 1 - alpha/2, or P(y <= t2) = 0.975
+# In other words, this will the the majority of the distribution
+t2 <- trials - as.data.frame(right.tail.table[names(right.tail.table) == T])[1, 1] + 1
+t2
+
+T1.prob <- pbinom(q=T1, size=trials, prob=probability)
+T1.prob
+
+T2.prob <- 1 - pbinom(q=T2, size=trials, prob=probability)
+T2.prob
+```
+
+Now it is clear,
+
+$$
+\begin{split}
+    T_1 &= 6\\
+    T_2 &= 4\\
+    t_1 &= 5\\
+    t_2 &= 14\\
+    c &= \{6 \nleq 5 \text{ or } 4 \ngtr 14\}\\
+\end{split}
+$$
+
+So we cannot reject the null hypothesis with a p-value of
+```{r}
+min(2*T1.prob, 2*T2.prob)
+```
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+## 2.) In Exercise 1 test the hypothesis that the upper quartile is at least 150.
+
+We will test the hypothesis that $x_{0.75} = 150$ with $\alpha = 0.05$ using a left-tailed test.
+
+$$
+\begin{split}
+    H_0 &: p \geq p^*\\
+    H_a &: p < p^*\\
+    c &= \{T_1: T_1 \leq t_1\}
+\end{split}
+$$
+
+```{r}
+T1 <- length(weights.df[weights.df$weights <= 150, ])
+T1
+```
+
+Since $n \leq 20$, the critical region is $c = \{T_1 \leq t_1\}$, such that $P(y \leq t_1) = \alpha$.
+
+$$
+\begin{split}
+    T_1 &= \text{number of } x_i \leq 150 = 16\\
+    c &= \{16 \leq t_1\}\\
+    P(y \leq t_1) &= 0.05\\
+\end{split}
+$$
+
+```{r}
+trials <- 20
+probability <- 0.75
+alpha <- 0.05
+left.crit.region <- alpha
+```
+
+```{r, echo=FALSE}
+n <- seq(0, trials, by=1)
+barplot(pbinom(n, trials, probability), names.arg=n, xlab=paste(paste(paste('Cumulative Binom(', trials), probability, sep=','), ')'))
+```
+
+```{r}
+
+# binomsum(start, end, n, p)
+# Gives a cumulative sum of the binomial from start to end, for n trials with p probability
+binomsum <- function(start, end, n, p) sum(dbinom(x=c(start:end), size=n, prob=p))
+
+# cumsums is a list of the cumulative probability at each point
+cumsums <- list(mapply(binomsum, 0, c(0:trials), trials, probability))
+
+# gives a TRUE/FALSE list where values are <= alpha/2
+left.tail <- lapply(cumsums, function(x) x <= left.crit.region)
+
+# Table sums up values
+left.tail.table <- table(left.tail)
+
+# Note that zero is counted in here, so we must subtract 1, otherwise we get
+# the value that sits outside outside of the range
+t1 <- as.data.frame(left.tail.table[names(left.tail.table) == T])[1, 1] - 1
+t1
+
+T1.prob <- pbinom(q=T1, size=trials, prob=probability)
+T1.prob
+```
+
+Now it is clear,
+
+$$
+\begin{split}
+    T_1 &= 16\\
+    t_1 &= 11\\
+    c &= \{16 \nleq 11\}\\
+\end{split}
+$$
+
+So we cannot reject the null hypothesis with a p-value of
+```{r}
+T1.prob
+```
+
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+## 3.) In Exercise 1 test the hypothesis that the third decile is no greater than 100.
+
+We will test the hypothesis that $x_{0.30} \leq 100$ with $\alpha = 0.05$ using a right-tailed test.
+
+$$
+\begin{split}
+    H_0 &: p \leq p^*\\
+    H_a &: p > p^*\\
+    c &= \{T_2: T_2 \leq t_2\}
+\end{split}
+$$
+
+```{r}
+T2 <- length(weights.df[weights.df$weights < 100, ])
+T2
+```
+
+Since $n \leq 20$, the critical region is $c = \{T_2 \geq t_2\}$, such that $P(y \geq t_2) = 1 - \alpha$.
+
+$$
+\begin{split}
+    T_2 &= \text{number of } x_i < 100 = 4\\
+    c &= \{4 > t_2\}\\
+    P(y \leq t_2) &= 0.95\\
+\end{split}
+$$
+
+```{r}
+trials <- 20
+probability <- 0.30
+alpha <- 0.05
+right.crit.region <- 1 - alpha
+```
+
+```{r, echo=FALSE}
+n <- seq(0, trials, by=1)
+barplot(pbinom(n, trials, probability), names.arg=n, xlab=paste(paste(paste('Cumulative Binom(', trials), probability, sep=','), ')'))
+```
+
+```{r}
+
+# binomsum(start, end, n, p)
+# Gives a cumulative sum of the binomial from start to end, for n trials with p probability
+binomsum <- function(start, end, n, p) sum(dbinom(x=c(start:end), size=n, prob=p))
+
+# cumsums is a list of the cumulative probability at each point
+cumsums <- list(mapply(binomsum, 0, c(0:trials), trials, probability))
+
+# gives a TRUE/FALSE list where values are >= 1 - (alpha / 2)
+right.tail <- lapply(cumsums, function(x) x >= right.crit.region)
+
+# Table sums up values
+right.tail.table <- table(right.tail)
+
+# Zero is counted in here, so we need to add one to get the value we're looking for
+# Also, recall we want t2 s.t. P(y <= t2) = 1 - alpha/2, or P(y <= t2) = 0.975
+# In other words, this will the the majority of the distribution
+t2 <- trials - as.data.frame(right.tail.table[names(right.tail.table) == T])[1, 1] + 1
+t2
+
+T2.prob <- 1 - pbinom(q=T2, size=trials, prob=probability)
+T2.prob
+```
+
+$$
+\begin{split}
+    T_2 &= 9\\
+    t_2 &= 10\\
+    c &= \{9 \ngtr 10\}\\
+\end{split}
+$$
+
+So we cannot reject the null hypothesis with a p-value of
+```{r}
+T2.prob
+```
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+
+
+## 4.) In Exercise 1 find an approximate 90% confidence interval for the median. What is the exact confidence coefficient? Also compare the results using the exact method with the results obtained using the large sample approximation.
+
+
+```{r}
+trials <- 20
+probability <- 0.50
+alpha <- 0.10
+left.crit.region <- alpha / 2
+right.crit.region <- 1 - (alpha / 2)
+```
+
+```{r, echo=FALSE}
+n <- seq(0, trials, by=1)
+barplot(pbinom(n, trials, probability), names.arg=n, xlab=paste(paste(paste('Cumulative Binom(', trials), probability, sep=','), ')'))
+```
+
+```{r}
+
+# binomsum(start, end, n, p)
+# Gives a cumulative sum of the binomial from start to end, for n trials with p probability
+binomsum <- function(start, end, n, p) sum(dbinom(x=c(start:end), size=n, prob=p))
+
+# cumsums is a list of the cumulative probability at each point
+cumsums <- list(mapply(binomsum, 0, c(0:trials), trials, probability))
+
+# gives a TRUE/FALSE list where values are <= alpha/2
+left.tail <- lapply(cumsums, function(x) x <= left.crit.region)
+
+# gives a TRUE/FALSE list where values are >= 1 - (alpha / 2)
+right.tail <- lapply(cumsums, function(x) x >= right.crit.region)
+
+# Table sums up values
+left.tail.table <- table(left.tail)
+right.tail.table <- table(right.tail)
+
+# Note that zero is counted in here, so we must subtract 1, otherwise we get
+# the value that sits outside outside of the range
+r <- as.data.frame(left.tail.table[names(left.tail.table) == T])[1, 1] - 1
+r
+
+# Zero is counted in here, so we need to add one to get the value we're looking for
+# Also, recall we want t2 s.t. P(y <= t2) = 1 - alpha/2, or P(y <= t2) = 0.975
+# In other words, this will the the majority of the distribution
+s <- trials - as.data.frame(right.tail.table[names(right.tail.table) == T])[1, 1] + 1
+s
+
+conf.coef <- pbinom(q=r, size=trials, p=probability) + (1 - pbinom(q=s, size=trials, p=probability))
+conf.coef
+```
+
+But $r$ and $s$ are the values \textit{below} 0.05 and \text{above} 0.95 respectively. They may not be the closest values. We'll test for these by hand (or we could look them up in the table, by why bother when we have R?)
+
+```{r}
+abs(0.05 - pbinom(q=r, size=trials, p=probability))
+abs(0.05 - pbinom(q=r+1, size=trials, p=probability))
+abs(0.95 - pbinom(q=s, size=trials, p=probability))
+abs(0.95 - pbinom(q=s-1, size=trials, p=probability))
+```
+So we can see that $r + 1 = 6$ and $s - 1 = 13$ are the closes values to a 90% confidence coefficient.
+
+The actual value of the confidence coefficient is
+```{r}
+conf.coef <- pbinom(q=r+1, size=trials, p=probability) + (1 - pbinom(q=s-1, size=trials, p=probability))
+conf.coef
+```
+
+This gives us values of
+```{r}
+weights[r + 1]
+weights[s - 1]
+```
+
+We can see that $r + 1$ and $s - 1$ are the values of the order statistics, which we found in the \textit{weights} list.
+
+So our approximate 90% confidence interval for $x_{0.50}$ is (103, 134).
+
+Finding the large sample approximation, we get
+
+$$
+\begin{split}
+    r^* &= np^* + z_{\frac{\alpha}{2}} \sqrt{np^*(1 - p^*)}\\
+    &= 20(0.50) + 1.6449 \sqrt{20 (.5)(1 - .5)}\\
+    &= 10 + 3.78108\\
+    &= \left \lceil 13.67811 \right \rceil\\
+    &= 14\\
+    \\
+    s^* &= np^* + z_{1 - \frac{\alpha}{2}} \sqrt{np^*(1 - p^*)}\\
+    &= 20(0.50) - 1.6449 \sqrt{20 (.5)(1 - .5)}\\
+    &= 10 - 3.678108\\
+    &= \left \lceil 6.321892 \right \rceil \\
+    &= 7
+\end{split}
+$$
+
+```{r}
+weights[14]
+weights[7]
+```
+
+And so our large sample approximation for a 90% confidence interval is (117, 137)
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+## 8.) Armor plating with a thickness of 10 cm is being tested to see how deeply a given projectile will penetrate armor. Fifty projectiles are fired at the armor plating, and the depth of penetration is measured. Seven of the projectiles pierced a hole through the armor plating, so their depth of penetration is recorded as 10+. All fifty values, ordered from smallest to largest, are given as follows.
+
+## 5.37, 5.39, 5.42, 5.51, 5.63, 5.74, 5.82, 5.83, 5.94, 5.98, 6.07, 6.07, 6.13, 6.20, 6.21, 6.23, 6.25, 6.26, 6.26, 6.28, 6.29, 6.31, 6.35, 6.41, 6.57, 6.67, 6.81, 7.03, 7.40, 7.44, 7.82, 8.03, 8.11, 8.44, 8.51, 8.72, 8.83, 9.04, 9.33, 9.51, 9.61, 9.68, 9.82, 10+, 10+, 10+, 10+, 10+, 10+, 10+
+
+## Find a 95% confidence interval for the median penetration of the armor.
+
+First, we'll need to get this data into a workable format.
+
+```{r}
+penetration <- c(5.37, 5.39, 5.42, 5.51, 5.63, 5.74, 5.82, 5.83, 
+                 5.94, 5.98, 6.07, 6.07, 6.13, 6.20, 6.21, 6.23, 
+                 6.25, 6.26, 6.26, 6.28, 6.29, 6.31, 6.35, 6.41, 
+                 6.57, 6.67, 6.81, 7.03, 7.40, 7.44, 7.82, 8.03, 
+                 8.11, 8.44, 8.51, 8.72, 8.83, 9.04, 9.33, 9.51, 
+                 9.61, 9.68, 9.82, 10, 10, 10, 10, 10, 10, 10)
+penetration.df <- data.frame(penetration)
+```
+
+```{r}
+trials <- 50
+probability <- 0.50
+alpha <- 0.05
+left.crit.region <- alpha / 2
+right.crit.region <- 1 - (alpha / 2)
+```
+
+Finding the large sample approximation, we get
+
+$$
+\begin{split}
+    r^* &= np^* + z_{\frac{\alpha}{2}} \sqrt{np^*(1 - p^*)}\\
+    &= 50(0.50) + 1.96 \sqrt{50 (.5)(1 - .5)}\\
+    &= 25 + 6.929646\\
+    &= \left \lceil 31.92965 \right \rceil\\
+    &= 32\\
+    \\
+    s^* &= np^* + z_{1 - \frac{\alpha}{2}} \sqrt{np^*(1 - p^*)}\\
+    &= 50(0.50) - 1.96 \sqrt{50 (.5)(1 - .5)}\\
+    &= 25 - 6.929646\\
+    &= \left \lceil 18.07035 \right \rceil \\
+    &= 19
+\end{split}
+$$
+
+```{r}
+penetration[32]
+penetration[19]
+```
+
+
+And so our large sample approximation for a 95% confidence interval is (6.26, 8.03).
+
+## Also perform test to see if the median = 6.5?
+
+
+We will test the hypothesis that $x_{0.50} = 6.5$ with $\alpha = 0.05$ using a two-tailed test.
+
+$$
+\begin{split}
+    H_0 &: p \leq p^*\\
+    H_a &: p > p^*\\
+    c &= \{T_1: T_1 \leq t_1 \text{ or } T_2: T_2 > t_2\}\\
+    n &= 50\\
+\end{split}
+$$
+
+```{r}
+T1 <- length(penetration.df[penetration.df$penetration <= 6.5, ])
+T1
+T2 <- length(penetration.df[penetration.df$penetration < 6.5, ])
+T2
+```
+
+Since $n > 20$, the critical region is $\{T_1: T_1 \leq t_1 \text{ or } T_2: T_2 > t_2\}$, such that $t_1 = np^* + z_{\frac{\alpha}{2}} \sqrt{np^*(1 - p^*)}$ and $t_2 = np^* + z_{1 - \frac{\alpha}{2}} \sqrt{np^*(1 - p^*)}$.
+
+$$
+\begin{split}
+    T_1 &= \text{number of } x_i \leq 6.5\\
+    T_2 &= \text{number of } x_i < 6.5\\
+    p-value &: min\{2P(y \leq T_1), 2P(y \geq T2)\}\\
+\end{split}
+$$
+
+Finding the P-values, we get
+
+```{r}
+  exact(min(pbinom(q=24, size=50, prob=0.5), (1 - pbinom(q=24, size=50, prob=0.5))))
+```
+
+And since $0.44 > \alpha$, we cannot reject the null hypothesis that 6.5 is the median.
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+
+
+
+
+
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+# Chapter 3.3
+
+## 7.) A fitness gym has measured the percentage of fat on 86 of its members.
+
+## (a) At least what percent of its members have fat percentages between the smallest and the largest of the percentages measured on the 86 members in the sample, with 95% certainty? With 90% certainty?
+
+Rephrasing this, we want to know what percentage of the population has a fat percentage in the sample.
+
+We want to find q, such that
+$$
+  X^{(r)} \leq \text{ at least q\% of the population } \leq x^{(n + 1 - m)}\\
+$$
+
+where
+$$
+  \begin{split}
+    n &= 86\\
+    \alpha &= 0.10\\
+    r &= 0\\
+    m &= 1\\
+    \chi_{2, 0.90}^2 &= 4.60517\\
+    q &= \frac{4n - 2(r + m -1) - \chi_{2(r + m), 1-\alpha}^2}{4n - 2(r + m - 1) + \chi_{2(r + m), 1 - \alpha}^2}\\
+    &= \frac{4(86) - 2(0 + 1 -1) - \chi_{2(0 + 1), 1 - 0.10}^2}{4(86) - 2(0 + 1 - 1) + \chi_{2(0 + 1), 1 - 0.10}^2}\\
+    &= \frac{344 - \chi_{2, 0.90}^2}{344 + \chi_{2, 0.90}^2}\\
+    &= \frac{344 - 4.60517}{344 + 4.60517}\\
+    &= \frac{339.3948}{348.6052}\\
+    &= 0.9735794\\
+  \end{split}
+$$
+
+```{r}
+tol.lim.q <- function(n, r, m, percentile) {
+  num <- (4*n - 2*(r + m - 1) - qchisq(p=percentile, df=2*(r + m))) 
+  denom <- (4*n - 2*(r + m - 1) + qchisq(p=percentile, df=2*(r + m)))
+  num / denom
+}
+qchisq(p=0.90, df=2*(0 + 1))
+tol.lim.q(n=86, r=0, m=1, percentile=0.90)
+```
+
+So 97.35794% of the population (the gym) will be represented, with 90% confidence.
+
+__NOTE: The back of the book lists 94.6%, but as we have shown clearly above, that number does not work out.__
+
+$$
+  \begin{split}
+    \chi_{2, 0.95}^2 &= 5.991465\\
+    q &= \frac{4n - 2(r + m -1) - \chi_{2(r + m), 1-\alpha}^2}{4n - 2(r + m - 1) + \chi_{2(r + m), 1 - \alpha}^2}\\
+    &= \frac{344 - \chi_{2, 0.95}^2}{344 + \chi_{2, 0.95}^2}\\
+    &= \frac{344 - 5.991465}{344 + 5.991465}\\
+    &= \frac{338.0085}{349.9915}\\
+    &= 0.9657622\\
+  \end{split}
+$$
+```{r}
+qchisq(p=0.95, df=2*(0 + 1))
+tol.lim.q(n=86, r=0, m=1, percentile=0.95)
+```
+With 95% confidence, we can say that 96.57622% will be represented.
+
+__NOTE: The back of the book lists 95.6%, but as we have shown clearly above, that number does not work out.__
+
+## (b) At least what percent of its members have fat percentage between $X^{(2)}$ and $X^{(85)}$ with 95% certainty? With 90% certainty?
+
+$$
+  \begin{split}
+    n &= 86\\
+    \alpha &= 0.05\\
+    r &= 2\\
+    m &= 2\\
+    \chi_{2, 0.90}^2 &= 4.60517\\
+    q &= \frac{4n - 2(r + m -1) - \chi_{2(r + m), 1-\alpha}^2}{4n - 2(r + m - 1) + \chi_{2(r + m), 1 - \alpha}^2}\\
+    &= \frac{344 - 6 - \chi_{6, 0.95}^2}{344 - 6 + \chi_{6, 0.95}^2}\\
+    &= \frac{344 - 6 - 15.50731}{344 - 6 + 15.50731}\\
+    &= \frac{322.49269}{353.50731}\\
+    &= 0.912265972661 \\
+  \end{split}
+$$
+```{r}
+qchisq(p=0.95, df=2*(2 + 2))
+tol.lim.q(n=86, r=2, m=2, percentile=0.95)
+```
+We can say 91.2265972661% will be represented with 95% confidence. 
+
+```{r}
+qchisq(p=0.90, df=2*(2 + 2))
+tol.lim.q(n=86, r=2, m=2, percentile=0.90)
+```
+
+And we can say with 90% confidence that 92.39441% will be represented.
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+## 10.) A computer model is developed to simulate the conditions within a combat unit (e.g. a communications center) in battle conditions. One of the items of interest, determined by the computer model, is the minimum number of people required to maintain a satisfactory level of operation of the combat unit. We want to staff the combat unit with enough people so it will operate satisfactorily during 90% of its battles.
+
+```{r}
+tol.lim.n <- function(q, r, m, prob) {
+  ceiling((1/4) * qchisq(p=prob, df=(2*(r + m))) * ((1 + q)/(1 - q)) + (1/2) * (r + m - 1))
+}
+```
+
+## (a) How many computer runs are necessary so we can be 99.9% sure that the number of people required is no more than $X^{(n)}$, the largest observed number in the computer runs?
+
+
+```{r}
+tol.lim.n(q=0.90, r=0, m=1, prob=0.999)
+```
+
+A total of 66 runs are necessary.
+
+## (b) How many computer runs are necessary so we can be 99.9% sure that the number of people required is between $X^{(1)}$ and $X^{(n)}$
+
+```{r}
+tol.lim.n(q=0.90, r=1, m=1, prob=0.999)
+```
+
+A total of 89 runs are necessary.
+
+## (c) How many computer runs are necessary so we can be 99.9% sure that the number of people required is between $X^{(2)}$ and $X^{(n - 1)}$?
+
+```{r}
+tol.lim.n(q=0.90, r=2, m=2, prob=0.999)
+```
+
+A total of 126 runs are necessary.
+
+## (d) How many computer runs are necessary so that we can be 99.9% sure that the number of people required is no more than $X^{(n - 4)}$?
+
+```{r}
+tol.lim.n(q=0.90, r=0, m=5, prob=0.999)
+```
+
+A total of 143 runs are necessary.
+
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+# Chapter 3.4
+
+## 1.) Six students went on a diet in an attempt to lose weight, with the following results:
+
+\begin{center}
+\begin{tabular}{ l c c c c c c}
+  \textbf{Name} & \textbf{Abdul} & \textbf{Ed} & \textbf{Jim} & \textbf{Max} & \textbf{Phil} & \textbf{Ray}\\
+  \hline\hline
+  \textit{Weight Before} & 174 & 191 & 188 & 182 & 201 & 188\\
+  \textit{Weight After}  & 165 & 186 & 183 & 178 & 203 & 181\\
+\end{tabular}
+\end{center}
+
+## Is the diet an effective means of losing weight?
+
+We will measure weight loss with a \textbf{+} and weight gain with a \textbf{-}.
+We make the following observations:
+\begin{center}
+\begin{tabular}{ l c}
+  \textbf{Name} & \textbf{+/-} \\
+  \hline\hline
+  Abdul & + \\
+  Ed    & + \\
+  Jim   & + \\
+  Max   & + \\
+  Phil  & - \\
+  Ray   & + \\
+\end{tabular}
+\end{center}
+
+
+$$
+  \begin{split}
+    n &= 6\\
+    \alpha &= 0.05\\
+    + &= 5\\
+    - &= 1\\
+    p^{*} &= \frac{5}{6}\\
+  \end{split}
+$$
+
+We can now perform a binomial test against the null hypothesis that the diet has no effect.
+
+$$
+  \begin{split}
+    H_0 &: P(+) = P(-)\\
+    H_a &: P(+) \neq P(-)\\
+  \end{split}
+$$
+
+```{r}
+ binom.test(x = 5, n = 6, p=0.5, alternative = c('two.sided'), conf.level = 0.95)
+```
+
+We cannot reject the null hypothesis, as our p-value of 0.20 does not fall in the critical region. We would likely need to increase our sample size. Had this test shown statistical significance, we could then do a one-sided test to see if the diet had a positive effect in losing weight, but since we don't have evidence toward _any_ effect, we won't bother testing it.
+
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+## 3.) Two different additives were compared to see which one is better for improving the durability of concrete. One hundred small batches of concrete were mixed under various conditions and, during the mixing, each batch was dived into two parts. One part received additive A and the other part received additive B. After the concrete hardened, the two pars in each batch were crushed against each other, and an observer determined which part appeared to be the most durable. In 77 cases the concrete with additive A was rated more durable; in 23 cases the concrete with additive B was rated more durable. Is there a significant difference between the effects of the two additives?
+
+$$
+  \begin{split}
+    n &= 100\\
+    + &= 77\\
+    - &= 23\\
+    H_0 &: P(+) = P(-)\\
+    H_a &: P(+) \neq P(-)\\
+  \end{split}
+$$
+
+```{r}
+ binom.test(x = 77, n = 100, p=0.5, alternative = c('two.sided'), conf.level = 0.95)
+```
+
+We reject the null hypothesis with a p-value << 0.05. There is a significant difference between the two addatives. 
+
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+# Chapter 3.5
+
+## 1.) One hundred thirty-five (135) citizens were selected at random and were asked to state their opinion regarding U.S. foreign policy. Forty-three (43) were opposed to the U.S. foreign policy. After several weeks, during which they received an informative newsletter, they were again asked their opinion; 37 were opposed, and 30 of the 37 were persons who originally were not opposed to the U.S. foreign policy. Is the change in numbers of people opposed to the U.S. foreign policy significant?
+
+```{r}
+Opinions <-
+    matrix(c(37, 30, 6, 62),
+           nrow = 2,
+           dimnames = list("Before" = c("Opposed", "Not Opposed"),
+                           "After" = c("Opposed", "Not Opposed")))
+Opinions
+```
+
+We can find our $T_1$ value with the following
+```{r}
+T1 <- ((6 - 30)^2)/(6 + 30)
+T1
+```
+
+And our $\chi^2$ value is 
+```{r}
+exact(qchisq(p=0.95, 1))
+```
+
+Our value of $T_1$ greatly exceeds our $\chi^2$ value. We can also do the convenient McNemar test in R:
+
+```{r}
+mcnemar.test(Opinions)
+```
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+## 4.) For each of the last 34 years a small Midwestern college recorded the average heights of male freshmen. The averages were 68.3, 68.6, 68.4, 68.1, 68.4, 68.2, 68.7, 68.9, 69.0, 68.8, 69.0, 68.6, 69.2, 69.2, 68.9, 68.6, 68.6, 68.8, 69.2, 68.8, 68.7, 69.5, 68.7, 68.8, 69.4, 69.3, 69.3, 69.5, 69.5, 69.0, 69.2, 69.2, 69.1, and 69.9. Do these averages indicate an increasing trend in height?
+
+```{r}
+heights <- c(68.3, 68.6, 68.4, 68.1, 68.4, 68.2, 68.7, 68.9, 69.0, 
+             68.8, 69.0, 68.6, 69.2, 69.2, 68.9, 68.6, 68.6, 68.8, 
+             69.2, 68.8, 68.7, 69.5, 68.7, 68.8, 69.4, 69.3, 69.3, 
+             69.5, 69.5, 69.0, 69.2, 69.2, 69.1, 69.9)
+length(heights)
+```
+
+We need to split this dataset into two halves, then pair the values in the $i$th position of each half, and subtract them. Then we'll count the resulting signs and perform a binomial test to see if there is a significant trend in height.
+
+
+```{r}
+# Split dataset into two vectors. The dataset has an even number, so we'll split along those lines.
+f.half <- heights[1:(length(heights)/2)]
+s.half <- heights[((length(heights)/2)+1):34]
+
+# Subtract the two vectors and store their differences as a new vector
+difference <- f.half - s.half
+difference
+
+# Get the signs of the differences vector and split them into positives and negatives
+signs <-  sign(difference)
+pos <- signs[signs > 0]
+neg <- signs[signs < 0]
+
+# Count the positive and negative signs
+pos.count <- length(pos)
+pos.count
+neg.count <- length(neg)
+neg.count
+total.count <- pos.count + neg.count
+
+# Perform a binomial test on the signs to determine if there is a trend
+exact(pbinom(q=pos.count, size=total.count, prob=0.50))
+```
+
+With a p-value of 0.0002593994, we can say there has been a significant trend in increasing height.
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+

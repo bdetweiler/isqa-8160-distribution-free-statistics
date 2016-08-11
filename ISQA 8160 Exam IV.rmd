@@ -1,0 +1,341 @@
+---
+title: "ISQA 8160 Exam IV"
+author: "Brian Detweiler"
+date: "Tuesday, August 11, 2016"
+output: pdf_document
+header-includes:
+- \usepackage{bbm}
+- \usepackage[utf8]{inputenc}
+- \usepackage{amsmath}
+- \usepackage{amssymb}
+- \usepackage{color}
+- \usepackage{progressbar}
+- \usepackage{array}
+- \usepackage{tikz}
+- \usepackage{verbatim}
+- \usepackage{color,soul}
+- \usepackage{blkarray}
+- \usepackage[utf8]{inputenc}
+- \usepackage{amssymb}
+- \usepackage{pifont}
+- \usepackage{diagbox}
+- \usepackage{listings}
+- \usepackage{color}
+---
+
+$$
+% Matrix variable boldface
+\newcommand{\matr}[1]{\mathbf{#1}}
+% I seem to typo this a lot, so we'll just alias it
+\newcommand{\fraC}[2]{\frac{#1}{#2}}
+% for repeating values
+\newcommand*\repeating[1]{\overline{#1}}
+\newcommand{\xmark}{\ding{55}}%
+\newcommand\tab[1][1cm]{\hspace*{#1}}
+\newcommand\encircle[1]{%
+  \tikz[baseline=(X.base)] 
+    \node (X) [draw, shape=circle, inner sep=0] {\strut #1};}
+\newcommand{\specialcell}[2][c]{%
+  \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
+\newcommand{\ceil}[1]{\left \lceil #1 \right \rceil }
+\newcommand{\floor}[1]{\left \lfloor #1 \right \rfloor }
+$$
+
+```{r, echo=FALSE}
+exact <- function(a) print(a, digits=nchar(a))
+# library(nortest)
+```
+
+# Chapter 5.1
+
+## 5.1 Problem 9 (page 423).) At the beginning of the year a first-grade class was randomly divided into two groups. One group was taught to read using a uniform method, where all students progressed from one stage to the next at the same time, following the teacher's direction. The second group was taught to read using an individual method, where each student progressed at his or her own rate according to a programmed workbook, under supervision of the teacher. At the end of the year each student was given a reading ability test, with the following results.
+
+```{r}
+firstGroup <- c(227, 176, 252, 149, 
+                16,  55,  234, 194,
+                247, 99,  184, 147,
+                88,  161, 171, 174,
+                194, 248, 206, 89)
+secondGroup <- c(209, 14,  165, 171, 
+                 292, 271, 151, 235, 
+                 147, 99,  63,  184, 
+                 53,  228, 271, 19,
+                 127, 151, 101, 179)
+```
+
+## (a) Test the null hypothesis that there is no difference in the two teaching methods against the alternative that the two population means are different.
+
+Let $F(x)$ and $G(x)$ be the respective distributions for $X_i$ and $Y_j$, such that $i \in {1, 2, \hdots, n}, j \in {1, 2, \hdots, m}$ and $n + m = N$. Then our hypotheses are given as
+
+$$
+\begin{split}
+  H_0 &: F(x) = G(x) \\
+  H_a &: F(x) \neq G(x) \\
+\end{split}
+$$
+
+We can find the $z$-value and use this as our statistic. R comes with a built-in Mann-Whitney test, also known as the \textit{wilcox.test} function, that will return a statistic that we can plug into a formula to obtain the $z$-value.
+
+$$
+\begin{split}
+  z &= \frac{W - \mu}{\sqrt{\sigma^2}}\\
+  \mu &= \frac{n_1 n_2}{2}\\
+  \sigma^2 &= \frac{n_1 n_2 (n_1 + n_2 + 1)}{12}\\
+\end{split}
+$$
+
+
+```{r}
+# Mean
+mu <- function(x, y) {
+  return((length(x) * length(y)) / 2)
+}
+mu(firstGroup, secondGroup)
+```
+
+```{r}
+# Variance
+sigma2 <- function(x, y) {
+  return((length(x) * length(y) * (length(x) + length(y) + 1)) / 12)
+}
+sigma2(firstGroup, secondGroup)
+```
+
+```{r}
+W.stat <- function(x, y, alpha=0.05) {
+  wilcox <- wilcox.test(x, y, alternative='two.sided', conf.level=alpha)
+  W <- as.numeric(wilcox$statistic)
+  return (W)
+}
+W.stat(firstGroup, secondGroup)
+```
+
+```{r}
+# Get the z-value by running the wilcox.test 
+# and using the resulting W statistic in the formula above
+z.value <- function(x, y, alpha=0.05, continuity=0) {
+  W <- W.stat(x, y, alpha)
+  return ((W + continuity - mu(x, y)) / sqrt(sigma2(x, y)))
+}
+z.value(firstGroup, secondGroup)
+```
+
+```{r}
+# Obtain a p-value given our z-value
+p.value1 <- pnorm(q=z.value(firstGroup, secondGroup, 0.05, 0.5))
+p.value2 <- pnorm(q=z.value(secondGroup, firstGroup, 0.05, -0.5))
+
+p.value <- min(p.value1, p.value2)
+
+print(paste('p-value (with continuity correction) = ', 2*p.value))
+```
+
+Therefore, we cannot reject the null hypothesis. The two methods appear to have equal distributions.
+
+\pagebreak
+
+## (b) Test the null hypothesis of equal variances against the alternative that the variance of the second population is greater than the variance of the population that used the uniform method of learning to read.
+
+
+$$
+\begin{split}
+  H_0 &: X \text{ and } Y \text{ are identically distributed, except for possibly different means} \\
+  H_a &: Var(X) < Var(Y) \\
+\end{split}
+$$
+
+This will be a lower tailed test.
+
+The absolute deviation from the mean is given by
+$$
+\begin{split}
+  \mathcal{U}_i &= |X_i - \mu_1|, i = 1, \hdots, n\\
+  \mathcal{V}_j &= |Y_j - \mu_2|, j = 1, \hdots, m\\
+  \mu_1 &= \overline{X}\\
+  \mu_2 &= \overline{Y}\\
+\end{split}
+$$
+
+```{r}
+x.bar <- mean(firstGroup)
+y.bar <- mean(secondGroup)
+
+bigU <- sort(unlist(lapply(firstGroup, function(xi) { return(abs(xi - x.bar)) })))
+bigU
+bigV <- sort(unlist(lapply(secondGroup, function(yi) { return(abs(yi - y.bar)) })))
+bigV
+```
+
+\textbf{Note: } Computing the combined ranks in R was a bit difficult, so I cheated and used Excel for this. See Excel sheet.
+
+$$
+  \begin{split}
+    \sum_{i = 1}^n R(\mathcal{U}_i) &= 384\\
+    T &= \sum_{i = 1}^n [R(\mathcal{U}_i])]^2\\
+      &= 9716\\
+    w_p &= \frac{n(N + 1)(2N + 1)}{6} - z_p \sqrt{\frac{mn(N + 1)(2N + 1)(8N + 11)}{180}}\\
+    &= \frac{20(41)(81)}{6} - 1.645 \sqrt{\frac{160(41)(81)(331)}{180}}\\
+    &= 11070 - 1.645 \sqrt{977112}\\
+    &= 11070 - 1626.06565052\\
+    &= 9443.93434948\\
+  \end{split}
+$$
+
+Since  $T > w_p$ ($9716 > 9443.93434948$), we reject the null hypothesis. $Var(Y)$ must be larger than $Var(X)$.
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+
+# Chapter 5.2
+
+## 5.2 Problem 13 (page 424).) The rate of return on investment in several common stocks over a period of time is figured by taking the market price of each stock at the end of the time period plus any dividends that wer paid during the time period and dividing the results by the price fo the stock at the beginning of the time period. The rate of return is recorded here for several stocks over nine 3-month periods. Does there seem to be a significant difference inthe rate of return for the different stocks?
+
+```{r}
+Stocks <- t(matrix(data=c(1.022, 0.996, 1.001, 1.064, 1.013, 1.113, 0.998, 0.993, 1.061,
+                          1.018, 0.998, 0.993, 1.073, 1.009, 1.126, 0.992, 1.004, 1.020,
+                          1.031, 1.021, 0.998, 1.020, 1.026, 1.088, 1.012, 1.010, 0.999,
+                          1.009, 0.981, 1.010, 1.051, 1.042, 1.141, 1.002, 0.998, 1.031,
+                          1.018, 0.992, 1.008, 1.061, 1.000, 1.103, 0.977, 0.987, 1.040),
+                   nrow=5,
+                   ncol=9))
+
+rownames(Stocks) <- c(1, 2, 3, 4, 5, 6, 7, 8, 9)
+colnames(Stocks) <- c('A', 'B', 'C', 'D', 'E')
+Stocks
+
+qchisq(0.950, 4)
+
+```
+
+$$
+\begin{split}
+  H_0 &: \text{ All the k population distribution functions are identical}\\
+  H_a &: \text{ At least one of the populations tends to yield larger observations than at least one other }\\
+  \chi_{0.95, 4}^2 &= 9.487729\\
+\end{split}
+$$
+
+```{r}
+A <- c(1.022, 0.996, 1.001, 1.064, 1.013, 1.113, 0.998, 0.993, 1.061)
+B <- c(1.018, 0.998, 0.993, 1.073, 1.009, 1.126, 0.992, 1.004, 1.020)
+C <- c(1.031, 1.021, 0.998, 1.020, 1.026, 1.088, 1.012, 1.010, 0.999)
+D <- c(1.009, 0.981, 1.010, 1.051, 1.042, 1.141, 1.002, 0.998, 1.031)
+E <- c(1.018, 0.992, 1.008, 1.061, 1.000, 1.103, 0.977, 0.987, 1.040)
+
+all <- list(g1=A, g2=B, g3=C, g4=D, g5=E)
+
+kruskal.test(all)
+```
+
+We cannot reject the null hypothesis. All the $k$ population functions have identical distribution functions, with a $p$-value of 0.9101.
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+# Chapter 5.7
+
+## 5.7 Problem 1 (page 364).) A random sample consisting of 20 people who drove automobiles was selected to see if alcohol affected reaction time. Each driver's reaction time was measured in a laboratory before and after drinking a specified amount of a beverage containing alcohol. The reaction times in seconds were as follows.
+
+```{r}
+Booze <- t(matrix(data=c(0.68, 0.73,
+                         0.64, 0.62,
+                         0.68, 0.66,
+                         0.82, 0.92,
+                         0.58, 0.68,
+                         0.80, 0.87,
+                         0.72, 0.77,
+                         0.65, 0.70,
+                         0.84, 0.88,
+                         0.73, 0.79,
+                         0.65, 0.72,
+                         0.59, 0.60,
+                         0.78, 0.78,
+                         0.67, 0.66,
+                         0.65, 0.68,
+                         0.76, 0.77,
+                         0.61, 0.72,
+                         0.86, 0.86,
+                         0.74, 0.72,
+                         0.88, 0.97),
+                   nrow=2,
+                   ncol=20))
+
+rownames(Booze) <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)
+colnames(Booze) <- c('Before', 'After')
+Booze
+
+```
+
+## Does alcohol affect reaction time?
+
+$$
+\begin{split}
+  %H_0 &: E[D] = 0 \\
+  %H_a &: E[D] \neq 0 \\
+\end{split}
+$$
+
+
+
+```{r}
+wilcox.test(Booze[, 1], Booze[, 2], paired=TRUE)
+```
+
+We reject the null hypothesis with strong evidence (p-value of 0.003024). Alcohol \textit{definitely} affects reaction time. Which I could have told you without statistics!
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
+
+
+
+# Chapter 5.8
+
+## 5.8 Problem 2 (page 385).) Twelve randomly selected students are involved in a learning experiment. Four lists of words are made up by the experimenter. Each list contains 20 pairs of words, but different methods of pairing are used on the four lists. Each student is handed a list, given five minutes to study it, and then examined on his or her ability to remember the words. This procedure is repeated for all four lists for each student, the order of the lists being rotated from one student to the next. The examination scores are as follows (20 is perfect).
+
+```{r}
+Words <- t(matrix(data=c(18, 7, 13, 15, 12, 11, 15, 10, 14, 9, 8, 10,
+                         14, 6, 14, 10, 11, 9, 16, 8, 12, 9, 6, 11,
+                         16, 5, 16, 12, 12, 9, 10, 11, 13, 9, 9, 13,
+                         20, 10, 17, 14, 18, 16, 14, 16, 15, 10, 14, 16),
+                   nrow=12,
+                   ncol=4))
+
+rownames(Words) <- c(1, 2, 3, 4)
+colnames(Words) <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+Words
+
+```
+
+## Are some lists easier to learn than others?
+
+## (a) Use the Friedman test.
+
+$$
+\begin{split}
+  %H_0 &: \text{Each ranking of the random variables within a block is equally likely}\\
+  %H_a &: \text{At least one of the treatments tends to yield larger observed values than at least one other }\\
+\end{split}
+$$
+
+```{r}
+friedman.test(Words)
+```
+
+We reject the null hypothesis with a p-value of 0.0005979. Some lists are definitely easier to learn than others.
+
+\begin{flushright}
+  $\blacksquare$
+\end{flushright}
+
+\pagebreak
